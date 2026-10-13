@@ -1,0 +1,3091 @@
+{
+  "version": 1,
+  "title": "Specter Transwing VTOL ürün ailesi — YER TUTUCU VERİ",
+  "referenceProductId": "T7-C",
+  "mission": {
+    "takeoffHoverS": 60,
+    "landingHoverS": 60,
+    "transitionS": 20,
+    "reserveFraction": 0.2,
+    "controlReserveFraction": 0.15,
+    "hoverHeightM": 30
+  },
+  "scenarios": [
+    {
+      "id": "calm_sl",
+      "name": "Sakin deniz seviyesi",
+      "description": "ISA, 0 m, rüzgârsız hover.",
+      "env": {
+        "altitudeM": 0,
+        "isaDeltaK": 0,
+        "windSpeedMs": 0,
+        "windFromDeg": 0,
+        "turbulence": "none",
+        "gustAmplitudeMs": 0,
+        "logProfile": true
+      },
+      "config": {
+        "flightMode": "hover",
+        "cruiseMotors": 2,
+        "batterySoc": 1
+      },
+      "sim": {
+        "durationS": 30,
+        "seed": 42,
+        "gustStartS": 5,
+        "gustDurationS": 2
+      }
+    },
+    {
+      "id": "crosswind_15",
+      "name": "15 m/s yan rüzgârda hover",
+      "description": "Sağdan 15 m/s sabit rüzgâr, hafif türbülans.",
+      "env": {
+        "altitudeM": 0,
+        "isaDeltaK": 0,
+        "windSpeedMs": 15,
+        "windFromDeg": 90,
+        "turbulence": "light",
+        "gustAmplitudeMs": 0,
+        "logProfile": true
+      },
+      "config": {
+        "flightMode": "hover",
+        "cruiseMotors": 2,
+        "batterySoc": 1
+      },
+      "sim": {
+        "durationS": 30,
+        "seed": 42,
+        "gustStartS": 5,
+        "gustDurationS": 2
+      }
+    },
+    {
+      "id": "hot_high",
+      "name": "Sıcak ve yüksek (2000 m, ISA+25)",
+      "description": "Düşük hava yoğunluğu: hover güç marjı azalır.",
+      "env": {
+        "altitudeM": 2000,
+        "isaDeltaK": 25,
+        "windSpeedMs": 5,
+        "windFromDeg": 45,
+        "turbulence": "light",
+        "gustAmplitudeMs": 0,
+        "logProfile": true
+      },
+      "config": {
+        "flightMode": "hover",
+        "cruiseMotors": 2,
+        "batterySoc": 1
+      },
+      "sim": {
+        "durationS": 30,
+        "seed": 42,
+        "gustStartS": 5,
+        "gustDurationS": 2
+      }
+    },
+    {
+      "id": "gust_transition",
+      "name": "Geçişte gust",
+      "description": "Hover→cruise geçişinde 8 m/s 1-cosine gust.",
+      "env": {
+        "altitudeM": 100,
+        "isaDeltaK": 0,
+        "windSpeedMs": 4,
+        "windFromDeg": 0,
+        "turbulence": "light",
+        "gustAmplitudeMs": 8,
+        "logProfile": true
+      },
+      "config": {
+        "flightMode": "transition",
+        "cruiseMotors": 4,
+        "batterySoc": 1
+      },
+      "sim": {
+        "durationS": 25,
+        "seed": 42,
+        "gustStartS": 8,
+        "gustDurationS": 2.5
+      }
+    },
+    {
+      "id": "severe_cruise",
+      "name": "Şiddetli türbülansta cruise",
+      "description": "MIL-HDBK-1797 şiddetli Dryden türbülansı, 2 motor cruise.",
+      "env": {
+        "altitudeM": 300,
+        "isaDeltaK": 0,
+        "windSpeedMs": 10,
+        "windFromDeg": 30,
+        "turbulence": "severe",
+        "gustAmplitudeMs": 0,
+        "logProfile": true
+      },
+      "config": {
+        "flightMode": "cruise",
+        "cruiseMotors": 2,
+        "batterySoc": 1
+      },
+      "sim": {
+        "durationS": 40,
+        "seed": 42,
+        "gustStartS": 5,
+        "gustDurationS": 2
+      }
+    },
+    {
+      "id": "ship_deck",
+      "name": "Gemi güvertesine iniş (sabit rüzgâr + türbülans)",
+      "description": "12 m/s karşıdan rüzgâr + orta türbülans + gust, 15 m hover.",
+      "env": {
+        "altitudeM": 15,
+        "isaDeltaK": 5,
+        "windSpeedMs": 12,
+        "windFromDeg": 20,
+        "turbulence": "moderate",
+        "gustAmplitudeMs": 5,
+        "logProfile": false
+      },
+      "config": {
+        "flightMode": "hover",
+        "cruiseMotors": 2,
+        "batterySoc": 0.6
+      },
+      "sim": {
+        "durationS": 40,
+        "seed": 42,
+        "gustStartS": 12,
+        "gustDurationS": 3
+      }
+    }
+  ],
+  "products": [
+    {
+      "id": "T5-C",
+      "name": "Specter T5 Sivil",
+      "sizeClass": "5 m",
+      "variant": "civil",
+      "geometry": {
+        "spanM": 5,
+        "chordRootM": 0.536,
+        "chordTipM": 0.321,
+        "airfoil": "4415",
+        "fuselageLengthM": 2.714,
+        "fuselageDiameterM": 0.3,
+        "landingGearHeightM": 0.257,
+        "hinge": {
+          "positionM": [
+            0.679,
+            0.107,
+            0.186
+          ],
+          "axisAzimuthDeg": 57.5,
+          "axisElevationDeg": -28.25,
+          "maxFoldDeg": 106.78,
+          "estimate": true
+        },
+        "rotors": [
+          {
+            "wing": "L",
+            "spanFraction": 0.32,
+            "diameterM": 0.929,
+            "foldableInCruise": false,
+            "hubOffsetM": 0.321
+          },
+          {
+            "wing": "L",
+            "spanFraction": 0.85,
+            "diameterM": 0.929,
+            "foldableInCruise": true,
+            "hubOffsetM": 0.321
+          },
+          {
+            "wing": "R",
+            "spanFraction": 0.32,
+            "diameterM": 0.929,
+            "foldableInCruise": false,
+            "hubOffsetM": 0.321
+          },
+          {
+            "wing": "R",
+            "spanFraction": 0.85,
+            "diameterM": 0.929,
+            "foldableInCruise": true,
+            "hubOffsetM": 0.321
+          }
+        ],
+        "estimate": true
+      },
+      "mass": {
+        "emptyKg": 40.96,
+        "batteryKg": 17.248,
+        "payloadMaxKg": 8.6,
+        "estimate": true
+      },
+      "propulsion": {
+        "motorMaxPowerW": 6343,
+        "figureOfMerit": 0.72,
+        "propEfficiency": 0.8,
+        "motorEscEfficiency": 0.88,
+        "estimate": true
+      },
+      "energy": {
+        "batteryWh": 3277,
+        "usableFraction": 0.85,
+        "estimate": true
+      },
+      "aero": {
+        "cd0": 0.032,
+        "oswaldE": 0.8,
+        "clMax": 1.4,
+        "sideCd": 1.1,
+        "estimate": true
+      },
+      "parts": [
+        {
+          "attach": "body",
+          "material": "Karbon/epoksi sandviç",
+          "bomRef": "AF-100",
+          "estimate": true,
+          "id": "fuselage",
+          "name": "Gövde",
+          "group": "Airframe",
+          "kind": "fuselage",
+          "massKg": 8.408,
+          "positionM": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Cam elyaf",
+          "bomRef": "AF-110",
+          "estimate": true,
+          "id": "nose_cone",
+          "name": "Burun konisi",
+          "group": "Airframe",
+          "kind": "nose",
+          "massKg": 0.862,
+          "positionM": [
+            1.214,
+            0,
+            0
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Bakır/PTFE",
+          "bomRef": "EL-300",
+          "estimate": true,
+          "id": "harness",
+          "name": "Kablo demeti",
+          "group": "Airframe",
+          "kind": "box",
+          "massKg": 1.294,
+          "positionM": [
+            0.143,
+            0.036,
+            0
+          ],
+          "sizeM": [
+            1,
+            0.043,
+            0.057
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Karbon/köpük",
+          "bomRef": "AF-130",
+          "estimate": true,
+          "id": "tail",
+          "name": "Kuyruk / stabilizör",
+          "group": "Airframe",
+          "kind": "tail",
+          "massKg": 1.725,
+          "positionM": [
+            -1.179,
+            0.143,
+            0
+          ]
+        },
+        {
+          "attach": "wingL",
+          "material": "Karbon kiriş + köpük",
+          "bomRef": "WG-200L",
+          "estimate": true,
+          "id": "wing_left",
+          "name": "Sol kanat",
+          "group": "Wing",
+          "kind": "wing",
+          "massKg": 6.037,
+          "positionM": [
+            0.614,
+            0.107,
+            -1.158
+          ]
+        },
+        {
+          "attach": "wingR",
+          "material": "Karbon kiriş + köpük",
+          "bomRef": "WG-200R",
+          "estimate": true,
+          "id": "wing_right",
+          "name": "Sağ kanat",
+          "group": "Wing",
+          "kind": "wing",
+          "massKg": 6.037,
+          "positionM": [
+            0.614,
+            0.107,
+            1.158
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Ti-6Al-4V / Al 7075",
+          "bomRef": "WG-210L",
+          "estimate": true,
+          "id": "hinge_left",
+          "name": "Sol menteşe + aktüatör",
+          "group": "Wing",
+          "kind": "hinge",
+          "massKg": 1.078,
+          "positionM": [
+            0.679,
+            0.107,
+            -0.186
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Ti-6Al-4V / Al 7075",
+          "bomRef": "WG-210R",
+          "estimate": true,
+          "id": "hinge_right",
+          "name": "Sağ menteşe + aktüatör",
+          "group": "Wing",
+          "kind": "hinge",
+          "massKg": 1.078,
+          "positionM": [
+            0.679,
+            0.107,
+            0.186
+          ]
+        },
+        {
+          "attach": "wingL",
+          "material": "BLDC motor / CFRP nasel",
+          "bomRef": "PR-400",
+          "estimate": true,
+          "id": "nacelle_L1",
+          "name": "Nasel + motor L1",
+          "group": "Propulsion",
+          "kind": "nacelle",
+          "massKg": 1.94,
+          "positionM": [
+            0.823,
+            0.107,
+            -0.926
+          ],
+          "rotorIndex": 0
+        },
+        {
+          "attach": "wingL",
+          "material": "CFRP",
+          "bomRef": "PR-410",
+          "estimate": true,
+          "id": "prop_L1",
+          "name": "Pervane L1",
+          "group": "Propulsion",
+          "kind": "rotor",
+          "massKg": 0.431,
+          "positionM": [
+            1,
+            0.107,
+            -0.926
+          ],
+          "rotorIndex": 0
+        },
+        {
+          "attach": "wingL",
+          "material": "BLDC motor / CFRP nasel",
+          "bomRef": "PR-401",
+          "estimate": true,
+          "id": "nacelle_L2",
+          "name": "Nasel + motor L2",
+          "group": "Propulsion",
+          "kind": "nacelle",
+          "massKg": 1.94,
+          "positionM": [
+            0.823,
+            0.107,
+            -2.153
+          ],
+          "rotorIndex": 1
+        },
+        {
+          "attach": "wingL",
+          "material": "CFRP",
+          "bomRef": "PR-411",
+          "estimate": true,
+          "id": "prop_L2",
+          "name": "Pervane L2 (katlanır)",
+          "group": "Propulsion",
+          "kind": "rotor",
+          "massKg": 0.431,
+          "positionM": [
+            1,
+            0.107,
+            -2.153
+          ],
+          "rotorIndex": 1
+        },
+        {
+          "attach": "wingR",
+          "material": "BLDC motor / CFRP nasel",
+          "bomRef": "PR-402",
+          "estimate": true,
+          "id": "nacelle_R1",
+          "name": "Nasel + motor R1",
+          "group": "Propulsion",
+          "kind": "nacelle",
+          "massKg": 1.94,
+          "positionM": [
+            0.823,
+            0.107,
+            0.926
+          ],
+          "rotorIndex": 2
+        },
+        {
+          "attach": "wingR",
+          "material": "CFRP",
+          "bomRef": "PR-412",
+          "estimate": true,
+          "id": "prop_R1",
+          "name": "Pervane R1",
+          "group": "Propulsion",
+          "kind": "rotor",
+          "massKg": 0.431,
+          "positionM": [
+            1,
+            0.107,
+            0.926
+          ],
+          "rotorIndex": 2
+        },
+        {
+          "attach": "wingR",
+          "material": "BLDC motor / CFRP nasel",
+          "bomRef": "PR-403",
+          "estimate": true,
+          "id": "nacelle_R2",
+          "name": "Nasel + motor R2",
+          "group": "Propulsion",
+          "kind": "nacelle",
+          "massKg": 1.94,
+          "positionM": [
+            0.823,
+            0.107,
+            2.153
+          ],
+          "rotorIndex": 3
+        },
+        {
+          "attach": "wingR",
+          "material": "CFRP",
+          "bomRef": "PR-413",
+          "estimate": true,
+          "id": "prop_R2",
+          "name": "Pervane R2 (katlanır)",
+          "group": "Propulsion",
+          "kind": "rotor",
+          "massKg": 0.431,
+          "positionM": [
+            1,
+            0.107,
+            2.153
+          ],
+          "rotorIndex": 3
+        },
+        {
+          "attach": "body",
+          "material": "Al 6061 kutu",
+          "bomRef": "AV-500",
+          "estimate": true,
+          "id": "avionics",
+          "name": "Aviyonik kutusu (FCC, INS)",
+          "group": "Avionics",
+          "kind": "avionics",
+          "massKg": 2.156,
+          "positionM": [
+            0.393,
+            0.029,
+            0
+          ],
+          "sizeM": [
+            0.257,
+            0.114,
+            0.157
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "—",
+          "bomRef": "AV-510",
+          "estimate": true,
+          "id": "datalink",
+          "name": "Veri linki + anten",
+          "group": "Avionics",
+          "kind": "box",
+          "massKg": 0.647,
+          "positionM": [
+            -0.786,
+            0.186,
+            0
+          ],
+          "sizeM": [
+            0.143,
+            0.071,
+            0.043
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Li-ion 21700",
+          "bomRef": "EN-600",
+          "estimate": true,
+          "id": "battery",
+          "name": "Batarya paketi",
+          "group": "Energy",
+          "kind": "battery",
+          "massKg": 17.248,
+          "positionM": [
+            -1.039,
+            -0.014,
+            0
+          ],
+          "sizeM": [
+            0.536,
+            0.157,
+            0.186
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "değişken",
+          "bomRef": "PL-700",
+          "estimate": true,
+          "id": "payload",
+          "name": "Payload modülü",
+          "group": "Payload",
+          "kind": "payload",
+          "massKg": 0,
+          "positionM": [
+            -0.5,
+            -0.214,
+            0
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Karbon tüp",
+          "bomRef": "LG-800",
+          "estimate": true,
+          "id": "landing_gear",
+          "name": "İniş takımı (kızak)",
+          "group": "Landing",
+          "kind": "gear",
+          "massKg": 2.156,
+          "positionM": [
+            -0.214,
+            -0.286,
+            0
+          ]
+        }
+      ],
+      "payloadOptions": [
+        {
+          "id": "eo_gimbal",
+          "name": "EO kamera gimbal",
+          "massKg": 1.7,
+          "dragAreaM2": 0.0077,
+          "variant": "civil",
+          "shape": "gimbal",
+          "estimate": true
+        },
+        {
+          "id": "lidar",
+          "name": "LiDAR",
+          "massKg": 2.6,
+          "dragAreaM2": 0.0102,
+          "variant": "civil",
+          "shape": "lidar",
+          "estimate": true
+        },
+        {
+          "id": "cargo",
+          "name": "Kargo kutusu",
+          "massKg": 8.6,
+          "dragAreaM2": 0.0255,
+          "variant": "civil",
+          "shape": "box",
+          "estimate": true
+        },
+        {
+          "id": "sar_kit",
+          "name": "Arama-kurtarma paketi",
+          "massKg": 5.2,
+          "dragAreaM2": 0.0179,
+          "variant": "civil",
+          "shape": "pod",
+          "estimate": true
+        }
+      ],
+      "derivedFrom": "T7-C",
+      "scaleFactor": 0.714
+    },
+    {
+      "id": "T5-M",
+      "name": "Specter T5 Askeri",
+      "sizeClass": "5 m",
+      "variant": "military",
+      "geometry": {
+        "spanM": 5,
+        "chordRootM": 0.536,
+        "chordTipM": 0.321,
+        "airfoil": "4415",
+        "fuselageLengthM": 2.714,
+        "fuselageDiameterM": 0.3,
+        "landingGearHeightM": 0.257,
+        "hinge": {
+          "positionM": [
+            0.679,
+            0.107,
+            0.186
+          ],
+          "axisAzimuthDeg": 57.5,
+          "axisElevationDeg": -28.25,
+          "maxFoldDeg": 106.78,
+          "estimate": true
+        },
+        "rotors": [
+          {
+            "wing": "L",
+            "spanFraction": 0.32,
+            "diameterM": 0.929,
+            "foldableInCruise": false,
+            "hubOffsetM": 0.321
+          },
+          {
+            "wing": "L",
+            "spanFraction": 0.85,
+            "diameterM": 0.929,
+            "foldableInCruise": true,
+            "hubOffsetM": 0.321
+          },
+          {
+            "wing": "R",
+            "spanFraction": 0.32,
+            "diameterM": 0.929,
+            "foldableInCruise": false,
+            "hubOffsetM": 0.321
+          },
+          {
+            "wing": "R",
+            "spanFraction": 0.85,
+            "diameterM": 0.929,
+            "foldableInCruise": true,
+            "hubOffsetM": 0.321
+          }
+        ],
+        "estimate": true
+      },
+      "mass": {
+        "emptyKg": 45.75,
+        "batteryKg": 17.248,
+        "payloadMaxKg": 8.6,
+        "estimate": true
+      },
+      "propulsion": {
+        "motorMaxPowerW": 6343,
+        "figureOfMerit": 0.72,
+        "propEfficiency": 0.8,
+        "motorEscEfficiency": 0.88,
+        "estimate": true
+      },
+      "energy": {
+        "batteryWh": 3277,
+        "usableFraction": 0.85,
+        "estimate": true
+      },
+      "aero": {
+        "cd0": 0.032,
+        "oswaldE": 0.8,
+        "clMax": 1.4,
+        "sideCd": 1.1,
+        "estimate": true
+      },
+      "parts": [
+        {
+          "attach": "body",
+          "material": "Karbon/epoksi sandviç",
+          "bomRef": "AF-100",
+          "estimate": true,
+          "id": "fuselage",
+          "name": "Gövde",
+          "group": "Airframe",
+          "kind": "fuselage",
+          "massKg": 9.249,
+          "positionM": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Cam elyaf",
+          "bomRef": "AF-110",
+          "estimate": true,
+          "id": "nose_cone",
+          "name": "Burun konisi",
+          "group": "Airframe",
+          "kind": "nose",
+          "massKg": 0.862,
+          "positionM": [
+            1.214,
+            0,
+            0
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Bakır/PTFE",
+          "bomRef": "EL-300",
+          "estimate": true,
+          "id": "harness",
+          "name": "Kablo demeti",
+          "group": "Airframe",
+          "kind": "box",
+          "massKg": 1.682,
+          "positionM": [
+            0.143,
+            0.036,
+            0
+          ],
+          "sizeM": [
+            1,
+            0.043,
+            0.057
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Karbon/köpük",
+          "bomRef": "AF-130",
+          "estimate": true,
+          "id": "tail",
+          "name": "Kuyruk / stabilizör",
+          "group": "Airframe",
+          "kind": "tail",
+          "massKg": 1.725,
+          "positionM": [
+            -1.179,
+            0.143,
+            0
+          ]
+        },
+        {
+          "attach": "wingL",
+          "material": "Karbon kiriş + köpük",
+          "bomRef": "WG-200L",
+          "estimate": true,
+          "id": "wing_left",
+          "name": "Sol kanat",
+          "group": "Wing",
+          "kind": "wing",
+          "massKg": 6.037,
+          "positionM": [
+            0.614,
+            0.107,
+            -1.158
+          ]
+        },
+        {
+          "attach": "wingR",
+          "material": "Karbon kiriş + köpük",
+          "bomRef": "WG-200R",
+          "estimate": true,
+          "id": "wing_right",
+          "name": "Sağ kanat",
+          "group": "Wing",
+          "kind": "wing",
+          "massKg": 6.037,
+          "positionM": [
+            0.614,
+            0.107,
+            1.158
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Ti-6Al-4V / Al 7075",
+          "bomRef": "WG-210L",
+          "estimate": true,
+          "id": "hinge_left",
+          "name": "Sol menteşe + aktüatör",
+          "group": "Wing",
+          "kind": "hinge",
+          "massKg": 1.078,
+          "positionM": [
+            0.679,
+            0.107,
+            -0.186
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Ti-6Al-4V / Al 7075",
+          "bomRef": "WG-210R",
+          "estimate": true,
+          "id": "hinge_right",
+          "name": "Sağ menteşe + aktüatör",
+          "group": "Wing",
+          "kind": "hinge",
+          "massKg": 1.078,
+          "positionM": [
+            0.679,
+            0.107,
+            0.186
+          ]
+        },
+        {
+          "attach": "wingL",
+          "material": "BLDC motor / CFRP nasel",
+          "bomRef": "PR-400",
+          "estimate": true,
+          "id": "nacelle_L1",
+          "name": "Nasel + motor L1",
+          "group": "Propulsion",
+          "kind": "nacelle",
+          "massKg": 1.94,
+          "positionM": [
+            0.823,
+            0.107,
+            -0.926
+          ],
+          "rotorIndex": 0
+        },
+        {
+          "attach": "wingL",
+          "material": "CFRP",
+          "bomRef": "PR-410",
+          "estimate": true,
+          "id": "prop_L1",
+          "name": "Pervane L1",
+          "group": "Propulsion",
+          "kind": "rotor",
+          "massKg": 0.431,
+          "positionM": [
+            1,
+            0.107,
+            -0.926
+          ],
+          "rotorIndex": 0
+        },
+        {
+          "attach": "wingL",
+          "material": "BLDC motor / CFRP nasel",
+          "bomRef": "PR-401",
+          "estimate": true,
+          "id": "nacelle_L2",
+          "name": "Nasel + motor L2",
+          "group": "Propulsion",
+          "kind": "nacelle",
+          "massKg": 1.94,
+          "positionM": [
+            0.823,
+            0.107,
+            -2.153
+          ],
+          "rotorIndex": 1
+        },
+        {
+          "attach": "wingL",
+          "material": "CFRP",
+          "bomRef": "PR-411",
+          "estimate": true,
+          "id": "prop_L2",
+          "name": "Pervane L2 (katlanır)",
+          "group": "Propulsion",
+          "kind": "rotor",
+          "massKg": 0.431,
+          "positionM": [
+            1,
+            0.107,
+            -2.153
+          ],
+          "rotorIndex": 1
+        },
+        {
+          "attach": "wingR",
+          "material": "BLDC motor / CFRP nasel",
+          "bomRef": "PR-402",
+          "estimate": true,
+          "id": "nacelle_R1",
+          "name": "Nasel + motor R1",
+          "group": "Propulsion",
+          "kind": "nacelle",
+          "massKg": 1.94,
+          "positionM": [
+            0.823,
+            0.107,
+            0.926
+          ],
+          "rotorIndex": 2
+        },
+        {
+          "attach": "wingR",
+          "material": "CFRP",
+          "bomRef": "PR-412",
+          "estimate": true,
+          "id": "prop_R1",
+          "name": "Pervane R1",
+          "group": "Propulsion",
+          "kind": "rotor",
+          "massKg": 0.431,
+          "positionM": [
+            1,
+            0.107,
+            0.926
+          ],
+          "rotorIndex": 2
+        },
+        {
+          "attach": "wingR",
+          "material": "BLDC motor / CFRP nasel",
+          "bomRef": "PR-403",
+          "estimate": true,
+          "id": "nacelle_R2",
+          "name": "Nasel + motor R2",
+          "group": "Propulsion",
+          "kind": "nacelle",
+          "massKg": 1.94,
+          "positionM": [
+            0.823,
+            0.107,
+            2.153
+          ],
+          "rotorIndex": 3
+        },
+        {
+          "attach": "wingR",
+          "material": "CFRP",
+          "bomRef": "PR-413",
+          "estimate": true,
+          "id": "prop_R2",
+          "name": "Pervane R2 (katlanır)",
+          "group": "Propulsion",
+          "kind": "rotor",
+          "massKg": 0.431,
+          "positionM": [
+            1,
+            0.107,
+            2.153
+          ],
+          "rotorIndex": 3
+        },
+        {
+          "attach": "body",
+          "material": "MIL-STD-810 kutu",
+          "bomRef": "AV-500",
+          "estimate": true,
+          "id": "avionics",
+          "name": "Aviyonik kutusu (FCC, INS)",
+          "group": "Avionics",
+          "kind": "avionics",
+          "massKg": 4.743,
+          "positionM": [
+            0.393,
+            0.029,
+            0
+          ],
+          "sizeM": [
+            0.257,
+            0.114,
+            0.157
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "—",
+          "bomRef": "AV-510",
+          "estimate": true,
+          "id": "datalink",
+          "name": "Veri linki + anten",
+          "group": "Avionics",
+          "kind": "box",
+          "massKg": 1.617,
+          "positionM": [
+            -0.786,
+            0.186,
+            0
+          ],
+          "sizeM": [
+            0.143,
+            0.071,
+            0.043
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Li-ion 21700",
+          "bomRef": "EN-600",
+          "estimate": true,
+          "id": "battery",
+          "name": "Batarya paketi",
+          "group": "Energy",
+          "kind": "battery",
+          "massKg": 17.248,
+          "positionM": [
+            -1.039,
+            -0.014,
+            0
+          ],
+          "sizeM": [
+            0.536,
+            0.157,
+            0.186
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "değişken",
+          "bomRef": "PL-700",
+          "estimate": true,
+          "id": "payload",
+          "name": "Payload modülü",
+          "group": "Payload",
+          "kind": "payload",
+          "massKg": 0,
+          "positionM": [
+            -0.5,
+            -0.214,
+            0
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Karbon tüp",
+          "bomRef": "LG-800",
+          "estimate": true,
+          "id": "landing_gear",
+          "name": "İniş takımı (kızak)",
+          "group": "Landing",
+          "kind": "gear",
+          "massKg": 2.156,
+          "positionM": [
+            -0.214,
+            -0.286,
+            0
+          ]
+        }
+      ],
+      "payloadOptions": [
+        {
+          "id": "eoir_gimbal",
+          "name": "EO/IR gimbal",
+          "massKg": 3.4,
+          "dragAreaM2": 0.0102,
+          "variant": "military",
+          "shape": "gimbal",
+          "estimate": true
+        },
+        {
+          "id": "sigint",
+          "name": "SIGINT modülü",
+          "massKg": 4.3,
+          "dragAreaM2": 0.0153,
+          "variant": "military",
+          "shape": "pod",
+          "estimate": true
+        },
+        {
+          "id": "comms_relay",
+          "name": "Haberleşme röle modülü",
+          "massKg": 3.9,
+          "dragAreaM2": 0.0179,
+          "variant": "military",
+          "shape": "antenna",
+          "estimate": true
+        },
+        {
+          "id": "cargo",
+          "name": "Kargo",
+          "massKg": 8.6,
+          "dragAreaM2": 0.0255,
+          "variant": "military",
+          "shape": "box",
+          "estimate": true
+        }
+      ],
+      "derivedFrom": "T7-M",
+      "scaleFactor": 0.714
+    },
+    {
+      "id": "T7-C",
+      "name": "Specter T7 Sivil",
+      "sizeClass": "7 m",
+      "variant": "civil",
+      "geometry": {
+        "spanM": 7,
+        "chordRootM": 0.75,
+        "chordTipM": 0.45,
+        "airfoil": "4415",
+        "fuselageLengthM": 3.8,
+        "fuselageDiameterM": 0.42,
+        "landingGearHeightM": 0.36,
+        "hinge": {
+          "positionM": [
+            0.95,
+            0.15,
+            0.26
+          ],
+          "axisAzimuthDeg": 57.5,
+          "axisElevationDeg": -28.25,
+          "maxFoldDeg": 106.78,
+          "estimate": true
+        },
+        "rotors": [
+          {
+            "wing": "L",
+            "spanFraction": 0.32,
+            "diameterM": 1.3,
+            "foldableInCruise": false,
+            "hubOffsetM": 0.45
+          },
+          {
+            "wing": "L",
+            "spanFraction": 0.85,
+            "diameterM": 1.3,
+            "foldableInCruise": true,
+            "hubOffsetM": 0.45
+          },
+          {
+            "wing": "R",
+            "spanFraction": 0.32,
+            "diameterM": 1.3,
+            "foldableInCruise": false,
+            "hubOffsetM": 0.45
+          },
+          {
+            "wing": "R",
+            "spanFraction": 0.85,
+            "diameterM": 1.3,
+            "foldableInCruise": true,
+            "hubOffsetM": 0.45
+          }
+        ],
+        "estimate": true
+      },
+      "mass": {
+        "emptyKg": 95,
+        "batteryKg": 40,
+        "payloadMaxKg": 20,
+        "estimate": true
+      },
+      "propulsion": {
+        "motorMaxPowerW": 16000,
+        "figureOfMerit": 0.72,
+        "propEfficiency": 0.8,
+        "motorEscEfficiency": 0.88,
+        "estimate": true
+      },
+      "energy": {
+        "batteryWh": 7600,
+        "usableFraction": 0.85,
+        "estimate": true
+      },
+      "aero": {
+        "cd0": 0.032,
+        "oswaldE": 0.8,
+        "clMax": 1.4,
+        "sideCd": 1.1,
+        "estimate": true
+      },
+      "parts": [
+        {
+          "attach": "body",
+          "material": "Karbon/epoksi sandviç",
+          "bomRef": "AF-100",
+          "estimate": true,
+          "id": "fuselage",
+          "name": "Gövde",
+          "group": "Airframe",
+          "kind": "fuselage",
+          "massKg": 19.5,
+          "positionM": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Cam elyaf",
+          "bomRef": "AF-110",
+          "estimate": true,
+          "id": "nose_cone",
+          "name": "Burun konisi",
+          "group": "Airframe",
+          "kind": "nose",
+          "massKg": 2,
+          "positionM": [
+            1.7,
+            0,
+            0
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Bakır/PTFE",
+          "bomRef": "EL-300",
+          "estimate": true,
+          "id": "harness",
+          "name": "Kablo demeti",
+          "group": "Airframe",
+          "kind": "box",
+          "massKg": 3,
+          "positionM": [
+            0.2,
+            0.05,
+            0
+          ],
+          "sizeM": [
+            1.4,
+            0.06,
+            0.08
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Karbon/köpük",
+          "bomRef": "AF-130",
+          "estimate": true,
+          "id": "tail",
+          "name": "Kuyruk / stabilizör",
+          "group": "Airframe",
+          "kind": "tail",
+          "massKg": 4,
+          "positionM": [
+            -1.65,
+            0.2,
+            0
+          ]
+        },
+        {
+          "attach": "wingL",
+          "material": "Karbon kiriş + köpük",
+          "bomRef": "WG-200L",
+          "estimate": true,
+          "id": "wing_left",
+          "name": "Sol kanat",
+          "group": "Wing",
+          "kind": "wing",
+          "massKg": 14,
+          "positionM": [
+            0.86,
+            0.15,
+            -1.621
+          ]
+        },
+        {
+          "attach": "wingR",
+          "material": "Karbon kiriş + köpük",
+          "bomRef": "WG-200R",
+          "estimate": true,
+          "id": "wing_right",
+          "name": "Sağ kanat",
+          "group": "Wing",
+          "kind": "wing",
+          "massKg": 14,
+          "positionM": [
+            0.86,
+            0.15,
+            1.621
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Ti-6Al-4V / Al 7075",
+          "bomRef": "WG-210L",
+          "estimate": true,
+          "id": "hinge_left",
+          "name": "Sol menteşe + aktüatör",
+          "group": "Wing",
+          "kind": "hinge",
+          "massKg": 2.5,
+          "positionM": [
+            0.95,
+            0.15,
+            -0.26
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Ti-6Al-4V / Al 7075",
+          "bomRef": "WG-210R",
+          "estimate": true,
+          "id": "hinge_right",
+          "name": "Sağ menteşe + aktüatör",
+          "group": "Wing",
+          "kind": "hinge",
+          "massKg": 2.5,
+          "positionM": [
+            0.95,
+            0.15,
+            0.26
+          ]
+        },
+        {
+          "attach": "wingL",
+          "material": "BLDC motor / CFRP nasel",
+          "bomRef": "PR-400",
+          "estimate": true,
+          "id": "nacelle_L1",
+          "name": "Nasel + motor L1",
+          "group": "Propulsion",
+          "kind": "nacelle",
+          "massKg": 4.5,
+          "positionM": [
+            1.152,
+            0.15,
+            -1.297
+          ],
+          "rotorIndex": 0
+        },
+        {
+          "attach": "wingL",
+          "material": "CFRP",
+          "bomRef": "PR-410",
+          "estimate": true,
+          "id": "prop_L1",
+          "name": "Pervane L1",
+          "group": "Propulsion",
+          "kind": "rotor",
+          "massKg": 1,
+          "positionM": [
+            1.4,
+            0.15,
+            -1.297
+          ],
+          "rotorIndex": 0
+        },
+        {
+          "attach": "wingL",
+          "material": "BLDC motor / CFRP nasel",
+          "bomRef": "PR-401",
+          "estimate": true,
+          "id": "nacelle_L2",
+          "name": "Nasel + motor L2",
+          "group": "Propulsion",
+          "kind": "nacelle",
+          "massKg": 4.5,
+          "positionM": [
+            1.152,
+            0.15,
+            -3.014
+          ],
+          "rotorIndex": 1
+        },
+        {
+          "attach": "wingL",
+          "material": "CFRP",
+          "bomRef": "PR-411",
+          "estimate": true,
+          "id": "prop_L2",
+          "name": "Pervane L2 (katlanır)",
+          "group": "Propulsion",
+          "kind": "rotor",
+          "massKg": 1,
+          "positionM": [
+            1.4,
+            0.15,
+            -3.014
+          ],
+          "rotorIndex": 1
+        },
+        {
+          "attach": "wingR",
+          "material": "BLDC motor / CFRP nasel",
+          "bomRef": "PR-402",
+          "estimate": true,
+          "id": "nacelle_R1",
+          "name": "Nasel + motor R1",
+          "group": "Propulsion",
+          "kind": "nacelle",
+          "massKg": 4.5,
+          "positionM": [
+            1.152,
+            0.15,
+            1.297
+          ],
+          "rotorIndex": 2
+        },
+        {
+          "attach": "wingR",
+          "material": "CFRP",
+          "bomRef": "PR-412",
+          "estimate": true,
+          "id": "prop_R1",
+          "name": "Pervane R1",
+          "group": "Propulsion",
+          "kind": "rotor",
+          "massKg": 1,
+          "positionM": [
+            1.4,
+            0.15,
+            1.297
+          ],
+          "rotorIndex": 2
+        },
+        {
+          "attach": "wingR",
+          "material": "BLDC motor / CFRP nasel",
+          "bomRef": "PR-403",
+          "estimate": true,
+          "id": "nacelle_R2",
+          "name": "Nasel + motor R2",
+          "group": "Propulsion",
+          "kind": "nacelle",
+          "massKg": 4.5,
+          "positionM": [
+            1.152,
+            0.15,
+            3.014
+          ],
+          "rotorIndex": 3
+        },
+        {
+          "attach": "wingR",
+          "material": "CFRP",
+          "bomRef": "PR-413",
+          "estimate": true,
+          "id": "prop_R2",
+          "name": "Pervane R2 (katlanır)",
+          "group": "Propulsion",
+          "kind": "rotor",
+          "massKg": 1,
+          "positionM": [
+            1.4,
+            0.15,
+            3.014
+          ],
+          "rotorIndex": 3
+        },
+        {
+          "attach": "body",
+          "material": "Al 6061 kutu",
+          "bomRef": "AV-500",
+          "estimate": true,
+          "id": "avionics",
+          "name": "Aviyonik kutusu (FCC, INS)",
+          "group": "Avionics",
+          "kind": "avionics",
+          "massKg": 5,
+          "positionM": [
+            0.55,
+            0.04,
+            0
+          ],
+          "sizeM": [
+            0.36,
+            0.16,
+            0.22
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "—",
+          "bomRef": "AV-510",
+          "estimate": true,
+          "id": "datalink",
+          "name": "Veri linki + anten",
+          "group": "Avionics",
+          "kind": "box",
+          "massKg": 1.5,
+          "positionM": [
+            -1.1,
+            0.26,
+            0
+          ],
+          "sizeM": [
+            0.2,
+            0.1,
+            0.06
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Li-ion 21700",
+          "bomRef": "EN-600",
+          "estimate": true,
+          "id": "battery",
+          "name": "Batarya paketi",
+          "group": "Energy",
+          "kind": "battery",
+          "massKg": 40,
+          "positionM": [
+            -1.475,
+            -0.02,
+            0
+          ],
+          "sizeM": [
+            0.75,
+            0.22,
+            0.26
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "değişken",
+          "bomRef": "PL-700",
+          "estimate": true,
+          "id": "payload",
+          "name": "Payload modülü",
+          "group": "Payload",
+          "kind": "payload",
+          "massKg": 0,
+          "positionM": [
+            -0.7,
+            -0.3,
+            0
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Karbon tüp",
+          "bomRef": "LG-800",
+          "estimate": true,
+          "id": "landing_gear",
+          "name": "İniş takımı (kızak)",
+          "group": "Landing",
+          "kind": "gear",
+          "massKg": 5,
+          "positionM": [
+            -0.3,
+            -0.4,
+            0
+          ]
+        }
+      ],
+      "payloadOptions": [
+        {
+          "id": "eo_gimbal",
+          "name": "EO kamera gimbal",
+          "massKg": 4,
+          "dragAreaM2": 0.015,
+          "variant": "civil",
+          "shape": "gimbal",
+          "estimate": true
+        },
+        {
+          "id": "lidar",
+          "name": "LiDAR",
+          "massKg": 6,
+          "dragAreaM2": 0.02,
+          "variant": "civil",
+          "shape": "lidar",
+          "estimate": true
+        },
+        {
+          "id": "cargo",
+          "name": "Kargo kutusu",
+          "massKg": 20,
+          "dragAreaM2": 0.05,
+          "variant": "civil",
+          "shape": "box",
+          "estimate": true
+        },
+        {
+          "id": "sar_kit",
+          "name": "Arama-kurtarma paketi",
+          "massKg": 12,
+          "dragAreaM2": 0.035,
+          "variant": "civil",
+          "shape": "pod",
+          "estimate": true
+        }
+      ]
+    },
+    {
+      "id": "T7-M",
+      "name": "Specter T7 Askeri",
+      "sizeClass": "7 m",
+      "variant": "military",
+      "geometry": {
+        "spanM": 7,
+        "chordRootM": 0.75,
+        "chordTipM": 0.45,
+        "airfoil": "4415",
+        "fuselageLengthM": 3.8,
+        "fuselageDiameterM": 0.42,
+        "landingGearHeightM": 0.36,
+        "hinge": {
+          "positionM": [
+            0.95,
+            0.15,
+            0.26
+          ],
+          "axisAzimuthDeg": 57.5,
+          "axisElevationDeg": -28.25,
+          "maxFoldDeg": 106.78,
+          "estimate": true
+        },
+        "rotors": [
+          {
+            "wing": "L",
+            "spanFraction": 0.32,
+            "diameterM": 1.3,
+            "foldableInCruise": false,
+            "hubOffsetM": 0.45
+          },
+          {
+            "wing": "L",
+            "spanFraction": 0.85,
+            "diameterM": 1.3,
+            "foldableInCruise": true,
+            "hubOffsetM": 0.45
+          },
+          {
+            "wing": "R",
+            "spanFraction": 0.32,
+            "diameterM": 1.3,
+            "foldableInCruise": false,
+            "hubOffsetM": 0.45
+          },
+          {
+            "wing": "R",
+            "spanFraction": 0.85,
+            "diameterM": 1.3,
+            "foldableInCruise": true,
+            "hubOffsetM": 0.45
+          }
+        ],
+        "estimate": true
+      },
+      "mass": {
+        "emptyKg": 106.1,
+        "batteryKg": 40,
+        "payloadMaxKg": 20,
+        "estimate": true
+      },
+      "propulsion": {
+        "motorMaxPowerW": 16000,
+        "figureOfMerit": 0.72,
+        "propEfficiency": 0.8,
+        "motorEscEfficiency": 0.88,
+        "estimate": true
+      },
+      "energy": {
+        "batteryWh": 7600,
+        "usableFraction": 0.85,
+        "estimate": true
+      },
+      "aero": {
+        "cd0": 0.032,
+        "oswaldE": 0.8,
+        "clMax": 1.4,
+        "sideCd": 1.1,
+        "estimate": true
+      },
+      "parts": [
+        {
+          "attach": "body",
+          "material": "Karbon/epoksi sandviç",
+          "bomRef": "AF-100",
+          "estimate": true,
+          "id": "fuselage",
+          "name": "Gövde",
+          "group": "Airframe",
+          "kind": "fuselage",
+          "massKg": 21.45,
+          "positionM": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Cam elyaf",
+          "bomRef": "AF-110",
+          "estimate": true,
+          "id": "nose_cone",
+          "name": "Burun konisi",
+          "group": "Airframe",
+          "kind": "nose",
+          "massKg": 2,
+          "positionM": [
+            1.7,
+            0,
+            0
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Bakır/PTFE",
+          "bomRef": "EL-300",
+          "estimate": true,
+          "id": "harness",
+          "name": "Kablo demeti",
+          "group": "Airframe",
+          "kind": "box",
+          "massKg": 3.9,
+          "positionM": [
+            0.2,
+            0.05,
+            0
+          ],
+          "sizeM": [
+            1.4,
+            0.06,
+            0.08
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Karbon/köpük",
+          "bomRef": "AF-130",
+          "estimate": true,
+          "id": "tail",
+          "name": "Kuyruk / stabilizör",
+          "group": "Airframe",
+          "kind": "tail",
+          "massKg": 4,
+          "positionM": [
+            -1.65,
+            0.2,
+            0
+          ]
+        },
+        {
+          "attach": "wingL",
+          "material": "Karbon kiriş + köpük",
+          "bomRef": "WG-200L",
+          "estimate": true,
+          "id": "wing_left",
+          "name": "Sol kanat",
+          "group": "Wing",
+          "kind": "wing",
+          "massKg": 14,
+          "positionM": [
+            0.86,
+            0.15,
+            -1.621
+          ]
+        },
+        {
+          "attach": "wingR",
+          "material": "Karbon kiriş + köpük",
+          "bomRef": "WG-200R",
+          "estimate": true,
+          "id": "wing_right",
+          "name": "Sağ kanat",
+          "group": "Wing",
+          "kind": "wing",
+          "massKg": 14,
+          "positionM": [
+            0.86,
+            0.15,
+            1.621
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Ti-6Al-4V / Al 7075",
+          "bomRef": "WG-210L",
+          "estimate": true,
+          "id": "hinge_left",
+          "name": "Sol menteşe + aktüatör",
+          "group": "Wing",
+          "kind": "hinge",
+          "massKg": 2.5,
+          "positionM": [
+            0.95,
+            0.15,
+            -0.26
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Ti-6Al-4V / Al 7075",
+          "bomRef": "WG-210R",
+          "estimate": true,
+          "id": "hinge_right",
+          "name": "Sağ menteşe + aktüatör",
+          "group": "Wing",
+          "kind": "hinge",
+          "massKg": 2.5,
+          "positionM": [
+            0.95,
+            0.15,
+            0.26
+          ]
+        },
+        {
+          "attach": "wingL",
+          "material": "BLDC motor / CFRP nasel",
+          "bomRef": "PR-400",
+          "estimate": true,
+          "id": "nacelle_L1",
+          "name": "Nasel + motor L1",
+          "group": "Propulsion",
+          "kind": "nacelle",
+          "massKg": 4.5,
+          "positionM": [
+            1.152,
+            0.15,
+            -1.297
+          ],
+          "rotorIndex": 0
+        },
+        {
+          "attach": "wingL",
+          "material": "CFRP",
+          "bomRef": "PR-410",
+          "estimate": true,
+          "id": "prop_L1",
+          "name": "Pervane L1",
+          "group": "Propulsion",
+          "kind": "rotor",
+          "massKg": 1,
+          "positionM": [
+            1.4,
+            0.15,
+            -1.297
+          ],
+          "rotorIndex": 0
+        },
+        {
+          "attach": "wingL",
+          "material": "BLDC motor / CFRP nasel",
+          "bomRef": "PR-401",
+          "estimate": true,
+          "id": "nacelle_L2",
+          "name": "Nasel + motor L2",
+          "group": "Propulsion",
+          "kind": "nacelle",
+          "massKg": 4.5,
+          "positionM": [
+            1.152,
+            0.15,
+            -3.014
+          ],
+          "rotorIndex": 1
+        },
+        {
+          "attach": "wingL",
+          "material": "CFRP",
+          "bomRef": "PR-411",
+          "estimate": true,
+          "id": "prop_L2",
+          "name": "Pervane L2 (katlanır)",
+          "group": "Propulsion",
+          "kind": "rotor",
+          "massKg": 1,
+          "positionM": [
+            1.4,
+            0.15,
+            -3.014
+          ],
+          "rotorIndex": 1
+        },
+        {
+          "attach": "wingR",
+          "material": "BLDC motor / CFRP nasel",
+          "bomRef": "PR-402",
+          "estimate": true,
+          "id": "nacelle_R1",
+          "name": "Nasel + motor R1",
+          "group": "Propulsion",
+          "kind": "nacelle",
+          "massKg": 4.5,
+          "positionM": [
+            1.152,
+            0.15,
+            1.297
+          ],
+          "rotorIndex": 2
+        },
+        {
+          "attach": "wingR",
+          "material": "CFRP",
+          "bomRef": "PR-412",
+          "estimate": true,
+          "id": "prop_R1",
+          "name": "Pervane R1",
+          "group": "Propulsion",
+          "kind": "rotor",
+          "massKg": 1,
+          "positionM": [
+            1.4,
+            0.15,
+            1.297
+          ],
+          "rotorIndex": 2
+        },
+        {
+          "attach": "wingR",
+          "material": "BLDC motor / CFRP nasel",
+          "bomRef": "PR-403",
+          "estimate": true,
+          "id": "nacelle_R2",
+          "name": "Nasel + motor R2",
+          "group": "Propulsion",
+          "kind": "nacelle",
+          "massKg": 4.5,
+          "positionM": [
+            1.152,
+            0.15,
+            3.014
+          ],
+          "rotorIndex": 3
+        },
+        {
+          "attach": "wingR",
+          "material": "CFRP",
+          "bomRef": "PR-413",
+          "estimate": true,
+          "id": "prop_R2",
+          "name": "Pervane R2 (katlanır)",
+          "group": "Propulsion",
+          "kind": "rotor",
+          "massKg": 1,
+          "positionM": [
+            1.4,
+            0.15,
+            3.014
+          ],
+          "rotorIndex": 3
+        },
+        {
+          "attach": "body",
+          "material": "MIL-STD-810 kutu",
+          "bomRef": "AV-500",
+          "estimate": true,
+          "id": "avionics",
+          "name": "Aviyonik kutusu (FCC, INS)",
+          "group": "Avionics",
+          "kind": "avionics",
+          "massKg": 11,
+          "positionM": [
+            0.55,
+            0.04,
+            0
+          ],
+          "sizeM": [
+            0.36,
+            0.16,
+            0.22
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "—",
+          "bomRef": "AV-510",
+          "estimate": true,
+          "id": "datalink",
+          "name": "Veri linki + anten",
+          "group": "Avionics",
+          "kind": "box",
+          "massKg": 3.75,
+          "positionM": [
+            -1.1,
+            0.26,
+            0
+          ],
+          "sizeM": [
+            0.2,
+            0.1,
+            0.06
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Li-ion 21700",
+          "bomRef": "EN-600",
+          "estimate": true,
+          "id": "battery",
+          "name": "Batarya paketi",
+          "group": "Energy",
+          "kind": "battery",
+          "massKg": 40,
+          "positionM": [
+            -1.475,
+            -0.02,
+            0
+          ],
+          "sizeM": [
+            0.75,
+            0.22,
+            0.26
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "değişken",
+          "bomRef": "PL-700",
+          "estimate": true,
+          "id": "payload",
+          "name": "Payload modülü",
+          "group": "Payload",
+          "kind": "payload",
+          "massKg": 0,
+          "positionM": [
+            -0.7,
+            -0.3,
+            0
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Karbon tüp",
+          "bomRef": "LG-800",
+          "estimate": true,
+          "id": "landing_gear",
+          "name": "İniş takımı (kızak)",
+          "group": "Landing",
+          "kind": "gear",
+          "massKg": 5,
+          "positionM": [
+            -0.3,
+            -0.4,
+            0
+          ]
+        }
+      ],
+      "payloadOptions": [
+        {
+          "id": "eoir_gimbal",
+          "name": "EO/IR gimbal",
+          "massKg": 8,
+          "dragAreaM2": 0.02,
+          "variant": "military",
+          "shape": "gimbal",
+          "estimate": true
+        },
+        {
+          "id": "sigint",
+          "name": "SIGINT modülü",
+          "massKg": 10,
+          "dragAreaM2": 0.03,
+          "variant": "military",
+          "shape": "pod",
+          "estimate": true
+        },
+        {
+          "id": "comms_relay",
+          "name": "Haberleşme röle modülü",
+          "massKg": 9,
+          "dragAreaM2": 0.035,
+          "variant": "military",
+          "shape": "antenna",
+          "estimate": true
+        },
+        {
+          "id": "cargo",
+          "name": "Kargo",
+          "massKg": 20,
+          "dragAreaM2": 0.05,
+          "variant": "military",
+          "shape": "box",
+          "estimate": true
+        }
+      ]
+    },
+    {
+      "id": "T10-C",
+      "name": "Specter T10 Sivil",
+      "sizeClass": "10 m",
+      "variant": "civil",
+      "geometry": {
+        "spanM": 10,
+        "chordRootM": 1.071,
+        "chordTipM": 0.643,
+        "airfoil": "4415",
+        "fuselageLengthM": 5.429,
+        "fuselageDiameterM": 0.6,
+        "landingGearHeightM": 0.514,
+        "hinge": {
+          "positionM": [
+            1.357,
+            0.214,
+            0.371
+          ],
+          "axisAzimuthDeg": 57.5,
+          "axisElevationDeg": -28.25,
+          "maxFoldDeg": 106.78,
+          "estimate": true
+        },
+        "rotors": [
+          {
+            "wing": "L",
+            "spanFraction": 0.32,
+            "diameterM": 1.857,
+            "foldableInCruise": false,
+            "hubOffsetM": 0.643
+          },
+          {
+            "wing": "L",
+            "spanFraction": 0.85,
+            "diameterM": 1.857,
+            "foldableInCruise": true,
+            "hubOffsetM": 0.643
+          },
+          {
+            "wing": "R",
+            "spanFraction": 0.32,
+            "diameterM": 1.857,
+            "foldableInCruise": false,
+            "hubOffsetM": 0.643
+          },
+          {
+            "wing": "R",
+            "spanFraction": 0.85,
+            "diameterM": 1.857,
+            "foldableInCruise": true,
+            "hubOffsetM": 0.643
+          }
+        ],
+        "estimate": true
+      },
+      "mass": {
+        "emptyKg": 231.73,
+        "batteryKg": 97.57,
+        "payloadMaxKg": 48.8,
+        "estimate": true
+      },
+      "propulsion": {
+        "motorMaxPowerW": 42668,
+        "figureOfMerit": 0.72,
+        "propEfficiency": 0.8,
+        "motorEscEfficiency": 0.88,
+        "estimate": true
+      },
+      "energy": {
+        "batteryWh": 18538,
+        "usableFraction": 0.85,
+        "estimate": true
+      },
+      "aero": {
+        "cd0": 0.032,
+        "oswaldE": 0.8,
+        "clMax": 1.4,
+        "sideCd": 1.1,
+        "estimate": true
+      },
+      "parts": [
+        {
+          "attach": "body",
+          "material": "Karbon/epoksi sandviç",
+          "bomRef": "AF-100",
+          "estimate": true,
+          "id": "fuselage",
+          "name": "Gövde",
+          "group": "Airframe",
+          "kind": "fuselage",
+          "massKg": 47.565,
+          "positionM": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Cam elyaf",
+          "bomRef": "AF-110",
+          "estimate": true,
+          "id": "nose_cone",
+          "name": "Burun konisi",
+          "group": "Airframe",
+          "kind": "nose",
+          "massKg": 4.878,
+          "positionM": [
+            2.429,
+            0,
+            0
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Bakır/PTFE",
+          "bomRef": "EL-300",
+          "estimate": true,
+          "id": "harness",
+          "name": "Kablo demeti",
+          "group": "Airframe",
+          "kind": "box",
+          "massKg": 7.318,
+          "positionM": [
+            0.286,
+            0.071,
+            0
+          ],
+          "sizeM": [
+            2,
+            0.086,
+            0.114
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Karbon/köpük",
+          "bomRef": "AF-130",
+          "estimate": true,
+          "id": "tail",
+          "name": "Kuyruk / stabilizör",
+          "group": "Airframe",
+          "kind": "tail",
+          "massKg": 9.757,
+          "positionM": [
+            -2.357,
+            0.286,
+            0
+          ]
+        },
+        {
+          "attach": "wingL",
+          "material": "Karbon kiriş + köpük",
+          "bomRef": "WG-200L",
+          "estimate": true,
+          "id": "wing_left",
+          "name": "Sol kanat",
+          "group": "Wing",
+          "kind": "wing",
+          "massKg": 34.149,
+          "positionM": [
+            1.229,
+            0.214,
+            -2.316
+          ]
+        },
+        {
+          "attach": "wingR",
+          "material": "Karbon kiriş + köpük",
+          "bomRef": "WG-200R",
+          "estimate": true,
+          "id": "wing_right",
+          "name": "Sağ kanat",
+          "group": "Wing",
+          "kind": "wing",
+          "massKg": 34.149,
+          "positionM": [
+            1.229,
+            0.214,
+            2.316
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Ti-6Al-4V / Al 7075",
+          "bomRef": "WG-210L",
+          "estimate": true,
+          "id": "hinge_left",
+          "name": "Sol menteşe + aktüatör",
+          "group": "Wing",
+          "kind": "hinge",
+          "massKg": 6.098,
+          "positionM": [
+            1.357,
+            0.214,
+            -0.371
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Ti-6Al-4V / Al 7075",
+          "bomRef": "WG-210R",
+          "estimate": true,
+          "id": "hinge_right",
+          "name": "Sağ menteşe + aktüatör",
+          "group": "Wing",
+          "kind": "hinge",
+          "massKg": 6.098,
+          "positionM": [
+            1.357,
+            0.214,
+            0.371
+          ]
+        },
+        {
+          "attach": "wingL",
+          "material": "BLDC motor / CFRP nasel",
+          "bomRef": "PR-400",
+          "estimate": true,
+          "id": "nacelle_L1",
+          "name": "Nasel + motor L1",
+          "group": "Propulsion",
+          "kind": "nacelle",
+          "massKg": 10.977,
+          "positionM": [
+            1.646,
+            0.214,
+            -1.853
+          ],
+          "rotorIndex": 0
+        },
+        {
+          "attach": "wingL",
+          "material": "CFRP",
+          "bomRef": "PR-410",
+          "estimate": true,
+          "id": "prop_L1",
+          "name": "Pervane L1",
+          "group": "Propulsion",
+          "kind": "rotor",
+          "massKg": 2.439,
+          "positionM": [
+            2,
+            0.214,
+            -1.853
+          ],
+          "rotorIndex": 0
+        },
+        {
+          "attach": "wingL",
+          "material": "BLDC motor / CFRP nasel",
+          "bomRef": "PR-401",
+          "estimate": true,
+          "id": "nacelle_L2",
+          "name": "Nasel + motor L2",
+          "group": "Propulsion",
+          "kind": "nacelle",
+          "massKg": 10.977,
+          "positionM": [
+            1.646,
+            0.214,
+            -4.306
+          ],
+          "rotorIndex": 1
+        },
+        {
+          "attach": "wingL",
+          "material": "CFRP",
+          "bomRef": "PR-411",
+          "estimate": true,
+          "id": "prop_L2",
+          "name": "Pervane L2 (katlanır)",
+          "group": "Propulsion",
+          "kind": "rotor",
+          "massKg": 2.439,
+          "positionM": [
+            2,
+            0.214,
+            -4.306
+          ],
+          "rotorIndex": 1
+        },
+        {
+          "attach": "wingR",
+          "material": "BLDC motor / CFRP nasel",
+          "bomRef": "PR-402",
+          "estimate": true,
+          "id": "nacelle_R1",
+          "name": "Nasel + motor R1",
+          "group": "Propulsion",
+          "kind": "nacelle",
+          "massKg": 10.977,
+          "positionM": [
+            1.646,
+            0.214,
+            1.853
+          ],
+          "rotorIndex": 2
+        },
+        {
+          "attach": "wingR",
+          "material": "CFRP",
+          "bomRef": "PR-412",
+          "estimate": true,
+          "id": "prop_R1",
+          "name": "Pervane R1",
+          "group": "Propulsion",
+          "kind": "rotor",
+          "massKg": 2.439,
+          "positionM": [
+            2,
+            0.214,
+            1.853
+          ],
+          "rotorIndex": 2
+        },
+        {
+          "attach": "wingR",
+          "material": "BLDC motor / CFRP nasel",
+          "bomRef": "PR-403",
+          "estimate": true,
+          "id": "nacelle_R2",
+          "name": "Nasel + motor R2",
+          "group": "Propulsion",
+          "kind": "nacelle",
+          "massKg": 10.977,
+          "positionM": [
+            1.646,
+            0.214,
+            4.306
+          ],
+          "rotorIndex": 3
+        },
+        {
+          "attach": "wingR",
+          "material": "CFRP",
+          "bomRef": "PR-413",
+          "estimate": true,
+          "id": "prop_R2",
+          "name": "Pervane R2 (katlanır)",
+          "group": "Propulsion",
+          "kind": "rotor",
+          "massKg": 2.439,
+          "positionM": [
+            2,
+            0.214,
+            4.306
+          ],
+          "rotorIndex": 3
+        },
+        {
+          "attach": "body",
+          "material": "Al 6061 kutu",
+          "bomRef": "AV-500",
+          "estimate": true,
+          "id": "avionics",
+          "name": "Aviyonik kutusu (FCC, INS)",
+          "group": "Avionics",
+          "kind": "avionics",
+          "massKg": 12.196,
+          "positionM": [
+            0.786,
+            0.057,
+            0
+          ],
+          "sizeM": [
+            0.514,
+            0.229,
+            0.314
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "—",
+          "bomRef": "AV-510",
+          "estimate": true,
+          "id": "datalink",
+          "name": "Veri linki + anten",
+          "group": "Avionics",
+          "kind": "box",
+          "massKg": 3.659,
+          "positionM": [
+            -1.571,
+            0.371,
+            0
+          ],
+          "sizeM": [
+            0.286,
+            0.143,
+            0.086
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Li-ion 21700",
+          "bomRef": "EN-600",
+          "estimate": true,
+          "id": "battery",
+          "name": "Batarya paketi",
+          "group": "Energy",
+          "kind": "battery",
+          "massKg": 97.57,
+          "positionM": [
+            -2.129,
+            -0.029,
+            0
+          ],
+          "sizeM": [
+            1.071,
+            0.314,
+            0.371
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "değişken",
+          "bomRef": "PL-700",
+          "estimate": true,
+          "id": "payload",
+          "name": "Payload modülü",
+          "group": "Payload",
+          "kind": "payload",
+          "massKg": 0,
+          "positionM": [
+            -1,
+            -0.429,
+            0
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Karbon tüp",
+          "bomRef": "LG-800",
+          "estimate": true,
+          "id": "landing_gear",
+          "name": "İniş takımı (kızak)",
+          "group": "Landing",
+          "kind": "gear",
+          "massKg": 12.196,
+          "positionM": [
+            -0.429,
+            -0.571,
+            0
+          ]
+        }
+      ],
+      "payloadOptions": [
+        {
+          "id": "eo_gimbal",
+          "name": "EO kamera gimbal",
+          "massKg": 9.8,
+          "dragAreaM2": 0.0306,
+          "variant": "civil",
+          "shape": "gimbal",
+          "estimate": true
+        },
+        {
+          "id": "lidar",
+          "name": "LiDAR",
+          "massKg": 14.6,
+          "dragAreaM2": 0.0408,
+          "variant": "civil",
+          "shape": "lidar",
+          "estimate": true
+        },
+        {
+          "id": "cargo",
+          "name": "Kargo kutusu",
+          "massKg": 48.8,
+          "dragAreaM2": 0.102,
+          "variant": "civil",
+          "shape": "box",
+          "estimate": true
+        },
+        {
+          "id": "sar_kit",
+          "name": "Arama-kurtarma paketi",
+          "massKg": 29.3,
+          "dragAreaM2": 0.0714,
+          "variant": "civil",
+          "shape": "pod",
+          "estimate": true
+        }
+      ],
+      "derivedFrom": "T7-C",
+      "scaleFactor": 1.429
+    },
+    {
+      "id": "T10-M",
+      "name": "Specter T10 Askeri",
+      "sizeClass": "10 m",
+      "variant": "military",
+      "geometry": {
+        "spanM": 10,
+        "chordRootM": 1.071,
+        "chordTipM": 0.643,
+        "airfoil": "4415",
+        "fuselageLengthM": 5.429,
+        "fuselageDiameterM": 0.6,
+        "landingGearHeightM": 0.514,
+        "hinge": {
+          "positionM": [
+            1.357,
+            0.214,
+            0.371
+          ],
+          "axisAzimuthDeg": 57.5,
+          "axisElevationDeg": -28.25,
+          "maxFoldDeg": 106.78,
+          "estimate": true
+        },
+        "rotors": [
+          {
+            "wing": "L",
+            "spanFraction": 0.32,
+            "diameterM": 1.857,
+            "foldableInCruise": false,
+            "hubOffsetM": 0.643
+          },
+          {
+            "wing": "L",
+            "spanFraction": 0.85,
+            "diameterM": 1.857,
+            "foldableInCruise": true,
+            "hubOffsetM": 0.643
+          },
+          {
+            "wing": "R",
+            "spanFraction": 0.32,
+            "diameterM": 1.857,
+            "foldableInCruise": false,
+            "hubOffsetM": 0.643
+          },
+          {
+            "wing": "R",
+            "spanFraction": 0.85,
+            "diameterM": 1.857,
+            "foldableInCruise": true,
+            "hubOffsetM": 0.643
+          }
+        ],
+        "estimate": true
+      },
+      "mass": {
+        "emptyKg": 258.8,
+        "batteryKg": 97.57,
+        "payloadMaxKg": 48.8,
+        "estimate": true
+      },
+      "propulsion": {
+        "motorMaxPowerW": 42668,
+        "figureOfMerit": 0.72,
+        "propEfficiency": 0.8,
+        "motorEscEfficiency": 0.88,
+        "estimate": true
+      },
+      "energy": {
+        "batteryWh": 18538,
+        "usableFraction": 0.85,
+        "estimate": true
+      },
+      "aero": {
+        "cd0": 0.032,
+        "oswaldE": 0.8,
+        "clMax": 1.4,
+        "sideCd": 1.1,
+        "estimate": true
+      },
+      "parts": [
+        {
+          "attach": "body",
+          "material": "Karbon/epoksi sandviç",
+          "bomRef": "AF-100",
+          "estimate": true,
+          "id": "fuselage",
+          "name": "Gövde",
+          "group": "Airframe",
+          "kind": "fuselage",
+          "massKg": 52.322,
+          "positionM": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Cam elyaf",
+          "bomRef": "AF-110",
+          "estimate": true,
+          "id": "nose_cone",
+          "name": "Burun konisi",
+          "group": "Airframe",
+          "kind": "nose",
+          "massKg": 4.878,
+          "positionM": [
+            2.429,
+            0,
+            0
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Bakır/PTFE",
+          "bomRef": "EL-300",
+          "estimate": true,
+          "id": "harness",
+          "name": "Kablo demeti",
+          "group": "Airframe",
+          "kind": "box",
+          "massKg": 9.513,
+          "positionM": [
+            0.286,
+            0.071,
+            0
+          ],
+          "sizeM": [
+            2,
+            0.086,
+            0.114
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Karbon/köpük",
+          "bomRef": "AF-130",
+          "estimate": true,
+          "id": "tail",
+          "name": "Kuyruk / stabilizör",
+          "group": "Airframe",
+          "kind": "tail",
+          "massKg": 9.757,
+          "positionM": [
+            -2.357,
+            0.286,
+            0
+          ]
+        },
+        {
+          "attach": "wingL",
+          "material": "Karbon kiriş + köpük",
+          "bomRef": "WG-200L",
+          "estimate": true,
+          "id": "wing_left",
+          "name": "Sol kanat",
+          "group": "Wing",
+          "kind": "wing",
+          "massKg": 34.149,
+          "positionM": [
+            1.229,
+            0.214,
+            -2.316
+          ]
+        },
+        {
+          "attach": "wingR",
+          "material": "Karbon kiriş + köpük",
+          "bomRef": "WG-200R",
+          "estimate": true,
+          "id": "wing_right",
+          "name": "Sağ kanat",
+          "group": "Wing",
+          "kind": "wing",
+          "massKg": 34.149,
+          "positionM": [
+            1.229,
+            0.214,
+            2.316
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Ti-6Al-4V / Al 7075",
+          "bomRef": "WG-210L",
+          "estimate": true,
+          "id": "hinge_left",
+          "name": "Sol menteşe + aktüatör",
+          "group": "Wing",
+          "kind": "hinge",
+          "massKg": 6.098,
+          "positionM": [
+            1.357,
+            0.214,
+            -0.371
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Ti-6Al-4V / Al 7075",
+          "bomRef": "WG-210R",
+          "estimate": true,
+          "id": "hinge_right",
+          "name": "Sağ menteşe + aktüatör",
+          "group": "Wing",
+          "kind": "hinge",
+          "massKg": 6.098,
+          "positionM": [
+            1.357,
+            0.214,
+            0.371
+          ]
+        },
+        {
+          "attach": "wingL",
+          "material": "BLDC motor / CFRP nasel",
+          "bomRef": "PR-400",
+          "estimate": true,
+          "id": "nacelle_L1",
+          "name": "Nasel + motor L1",
+          "group": "Propulsion",
+          "kind": "nacelle",
+          "massKg": 10.977,
+          "positionM": [
+            1.646,
+            0.214,
+            -1.853
+          ],
+          "rotorIndex": 0
+        },
+        {
+          "attach": "wingL",
+          "material": "CFRP",
+          "bomRef": "PR-410",
+          "estimate": true,
+          "id": "prop_L1",
+          "name": "Pervane L1",
+          "group": "Propulsion",
+          "kind": "rotor",
+          "massKg": 2.439,
+          "positionM": [
+            2,
+            0.214,
+            -1.853
+          ],
+          "rotorIndex": 0
+        },
+        {
+          "attach": "wingL",
+          "material": "BLDC motor / CFRP nasel",
+          "bomRef": "PR-401",
+          "estimate": true,
+          "id": "nacelle_L2",
+          "name": "Nasel + motor L2",
+          "group": "Propulsion",
+          "kind": "nacelle",
+          "massKg": 10.977,
+          "positionM": [
+            1.646,
+            0.214,
+            -4.306
+          ],
+          "rotorIndex": 1
+        },
+        {
+          "attach": "wingL",
+          "material": "CFRP",
+          "bomRef": "PR-411",
+          "estimate": true,
+          "id": "prop_L2",
+          "name": "Pervane L2 (katlanır)",
+          "group": "Propulsion",
+          "kind": "rotor",
+          "massKg": 2.439,
+          "positionM": [
+            2,
+            0.214,
+            -4.306
+          ],
+          "rotorIndex": 1
+        },
+        {
+          "attach": "wingR",
+          "material": "BLDC motor / CFRP nasel",
+          "bomRef": "PR-402",
+          "estimate": true,
+          "id": "nacelle_R1",
+          "name": "Nasel + motor R1",
+          "group": "Propulsion",
+          "kind": "nacelle",
+          "massKg": 10.977,
+          "positionM": [
+            1.646,
+            0.214,
+            1.853
+          ],
+          "rotorIndex": 2
+        },
+        {
+          "attach": "wingR",
+          "material": "CFRP",
+          "bomRef": "PR-412",
+          "estimate": true,
+          "id": "prop_R1",
+          "name": "Pervane R1",
+          "group": "Propulsion",
+          "kind": "rotor",
+          "massKg": 2.439,
+          "positionM": [
+            2,
+            0.214,
+            1.853
+          ],
+          "rotorIndex": 2
+        },
+        {
+          "attach": "wingR",
+          "material": "BLDC motor / CFRP nasel",
+          "bomRef": "PR-403",
+          "estimate": true,
+          "id": "nacelle_R2",
+          "name": "Nasel + motor R2",
+          "group": "Propulsion",
+          "kind": "nacelle",
+          "massKg": 10.977,
+          "positionM": [
+            1.646,
+            0.214,
+            4.306
+          ],
+          "rotorIndex": 3
+        },
+        {
+          "attach": "wingR",
+          "material": "CFRP",
+          "bomRef": "PR-413",
+          "estimate": true,
+          "id": "prop_R2",
+          "name": "Pervane R2 (katlanır)",
+          "group": "Propulsion",
+          "kind": "rotor",
+          "massKg": 2.439,
+          "positionM": [
+            2,
+            0.214,
+            4.306
+          ],
+          "rotorIndex": 3
+        },
+        {
+          "attach": "body",
+          "material": "MIL-STD-810 kutu",
+          "bomRef": "AV-500",
+          "estimate": true,
+          "id": "avionics",
+          "name": "Aviyonik kutusu (FCC, INS)",
+          "group": "Avionics",
+          "kind": "avionics",
+          "massKg": 26.832,
+          "positionM": [
+            0.786,
+            0.057,
+            0
+          ],
+          "sizeM": [
+            0.514,
+            0.229,
+            0.314
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "—",
+          "bomRef": "AV-510",
+          "estimate": true,
+          "id": "datalink",
+          "name": "Veri linki + anten",
+          "group": "Avionics",
+          "kind": "box",
+          "massKg": 9.147,
+          "positionM": [
+            -1.571,
+            0.371,
+            0
+          ],
+          "sizeM": [
+            0.286,
+            0.143,
+            0.086
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Li-ion 21700",
+          "bomRef": "EN-600",
+          "estimate": true,
+          "id": "battery",
+          "name": "Batarya paketi",
+          "group": "Energy",
+          "kind": "battery",
+          "massKg": 97.57,
+          "positionM": [
+            -2.129,
+            -0.029,
+            0
+          ],
+          "sizeM": [
+            1.071,
+            0.314,
+            0.371
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "değişken",
+          "bomRef": "PL-700",
+          "estimate": true,
+          "id": "payload",
+          "name": "Payload modülü",
+          "group": "Payload",
+          "kind": "payload",
+          "massKg": 0,
+          "positionM": [
+            -1,
+            -0.429,
+            0
+          ]
+        },
+        {
+          "attach": "body",
+          "material": "Karbon tüp",
+          "bomRef": "LG-800",
+          "estimate": true,
+          "id": "landing_gear",
+          "name": "İniş takımı (kızak)",
+          "group": "Landing",
+          "kind": "gear",
+          "massKg": 12.196,
+          "positionM": [
+            -0.429,
+            -0.571,
+            0
+          ]
+        }
+      ],
+      "payloadOptions": [
+        {
+          "id": "eoir_gimbal",
+          "name": "EO/IR gimbal",
+          "massKg": 19.5,
+          "dragAreaM2": 0.0408,
+          "variant": "military",
+          "shape": "gimbal",
+          "estimate": true
+        },
+        {
+          "id": "sigint",
+          "name": "SIGINT modülü",
+          "massKg": 24.4,
+          "dragAreaM2": 0.0612,
+          "variant": "military",
+          "shape": "pod",
+          "estimate": true
+        },
+        {
+          "id": "comms_relay",
+          "name": "Haberleşme röle modülü",
+          "massKg": 22,
+          "dragAreaM2": 0.0714,
+          "variant": "military",
+          "shape": "antenna",
+          "estimate": true
+        },
+        {
+          "id": "cargo",
+          "name": "Kargo",
+          "massKg": 48.8,
+          "dragAreaM2": 0.102,
+          "variant": "military",
+          "shape": "box",
+          "estimate": true
+        }
+      ],
+      "derivedFrom": "T7-M",
+      "scaleFactor": 1.429
+    }
+  ]
+}
