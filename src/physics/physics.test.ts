@@ -21,9 +21,10 @@ const prod = (id: string) => S.products.find((p) => p.id === id) as Product;
 const t7 = prod('T7-C');
 
 describe('specs.json', () => {
-  it('validates without errors and has 6 products', () => {
+  it('validates without errors and has the reference + 6 derived products', () => {
     expect(issues.filter((i) => i.level === 'error')).toEqual([]);
-    expect(S.products).toHaveLength(6);
+    expect(S.products).toHaveLength(7);
+    expect(S.products[0].id).toBe('TW4');
     expect(S.scenarios.length).toBeGreaterThanOrEqual(6);
   });
   it('rejects malformed data', () => {

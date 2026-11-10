@@ -5,8 +5,6 @@ import { atmosphere } from './atmosphere';
 import { massProperties } from './massProps';
 import { G0, type Result } from './types';
 
-/** Propeller efficiency penalty when all 4 props share the low cruise load. */
-export const FOUR_MOTOR_ETA_FACTOR = 0.92;
 
 export interface CruiseInput {
   product: Product;
@@ -54,7 +52,7 @@ export function cruisePoint(input: CruiseInput, speedMs: number, massKg?: number
   const cdPayload = (input.payload?.dragAreaM2 ?? 0) / S;
   const cd = p.aero.cd0 + (cl * cl) / (Math.PI * p.aero.oswaldE * AR) + cdPayload;
   const D = q * S * cd;
-  const etaProp = p.propulsion.propEfficiency * (input.motors === 4 ? FOUR_MOTOR_ETA_FACTOR : 1);
+  const etaProp = p.propulsion.propEfficiency * (input.motors === 4 ? p.propulsion.fourMotorEtaFactor : 1);
   const shaft = (D * speedMs) / etaProp;
   const elec = shaft / p.propulsion.motorEscEfficiency;
   return { speedMs, cl, cd, dragN: D, shaftPowerW: shaft, electricPowerW: elec, energyPerMetre: elec / speedMs };
@@ -105,7 +103,7 @@ export function cruisePerformance(input: CruiseInput): Result<CruisePerformance>
       'Parabolik sürüklenme poları: CD = CD0 + CL²/(π·e·AR) + payload CD·S / S.',
       'Referans alan brüt trapez kanat alanı; AR = b²/S.',
       'Stall hızı Vs = √(2W / (ρ S CLmax)); operasyonel hızlar ≥ 1.2·Vs.',
-      `4 motorlu cruise'da pervane verimi ×${FOUR_MOTOR_ETA_FACTOR} (düşük yükte çalışma) kabul edildi; 2 motorda katlı pervanelerin sürüklenmesi CD0 içinde.`,
+      `4 motorlu cruise'da pervane verimi ×${p.propulsion.fourMotorEtaFactor} (düşük yükte çalışma) kabul edildi; 2 motorda katlı pervanelerin sürüklenmesi CD0 içinde.`,
       'Mevcut güç = aktif motor sayısı × motorMaxPowerW (şaft).',
       'Sıkıştırılabilirlik ve Reynolds etkileri ihmal edildi.',
     ],

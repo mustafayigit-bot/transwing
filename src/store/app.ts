@@ -1,9 +1,11 @@
 import { create } from 'zustand';
 import type { Scenario, SpecsFile, ValidationIssue } from '../data/schema';
+import type { MissionTrace } from '../physics/fdm/mission';
+import type { AnalysisReport } from '../physics/fdm/trim';
 import type { SimTrace } from '../physics/sim';
 import type { Environment, FlightMode } from '../physics/types';
 
-export type Tab = 'config' | 'compare' | 'envelope' | 'matrix';
+export type Tab = 'config' | 'mission' | 'compare' | 'envelope' | 'matrix';
 export type CameraPreset = 'front' | 'side' | 'top' | 'iso';
 
 export interface SimSettings {
@@ -58,6 +60,14 @@ export interface AppState {
   replayT: number;
   replayPlaying: boolean;
   replaySpeed: number;
+
+  mission: MissionTrace | null;
+  missionRunning: boolean;
+  missionProgress: number;
+  missionPhase: number;
+  missionError: string | null;
+  analysis: AnalysisReport | null;
+  analysisRunning: boolean;
 
   compareB: { productId: string; payloadId: string };
   envelopeAxis: 'altitude' | 'payload';
@@ -121,6 +131,13 @@ export const useApp = create<AppState>((set, get) => ({
   replayT: 0,
   replayPlaying: false,
   replaySpeed: 1,
+  mission: null,
+  missionRunning: false,
+  missionProgress: 0,
+  missionPhase: 0,
+  missionError: null,
+  analysis: null,
+  analysisRunning: false,
   compareB: { productId: '', payloadId: 'none' },
   envelopeAxis: 'altitude',
   envelopeOverlay: true,
@@ -151,6 +168,9 @@ export const useApp = create<AppState>((set, get) => ({
     set({
       productId: id,
       payloadId: keep ? st.payloadId : product.payloadOptions[0]?.id ?? 'none',
+      cruiseMotors: product.propulsion.defaultCruiseMotors,
+      mission: null,
+      analysis: null,
       foldDeg: foldForMode(st.flightMode, product.geometry.hinge.maxFoldDeg),
       selectedPart: null,
       isolatedPart: null,

@@ -10,7 +10,7 @@ const vec3 = z.tuple([z.number(), z.number(), z.number()]);
 
 export const PART_GROUPS = ['Airframe', 'Wing', 'Propulsion', 'Energy', 'Avionics', 'Payload', 'Landing'] as const;
 export const PART_KINDS = [
-  'fuselage', 'nose', 'tail', 'wing', 'hinge', 'nacelle', 'rotor', 'battery', 'avionics', 'payload', 'gear', 'box',
+  'fuselage', 'nose', 'tail', 'wing', 'centerwing', 'hinge', 'nacelle', 'rotor', 'battery', 'avionics', 'payload', 'gear', 'box',
 ] as const;
 
 export const hingeSchema = z.object({
@@ -34,6 +34,8 @@ export const rotorSchema = z.object({
   foldableInCruise: z.boolean(),
   /** Distance of the propeller plane ahead of the wing quarter-chord line (cruise frame). */
   hubOffsetM: z.number().default(0.35),
+  /** Spin direction seen along the thrust axis: +1 / -1. Diagonal pairs share a direction in hover. */
+  spin: z.union([z.literal(1), z.literal(-1)]).optional(),
 });
 
 export const partSchema = z.object({
@@ -66,6 +68,98 @@ export const payloadOptionSchema = z.object({
   estimate: z.boolean().default(true),
 });
 
+/** Lookup table of propeller coefficients vs advance ratio J = V / (n·D). T = CT·ρ·n²·D⁴, P = CP·ρ·n³·D⁵. */
+const propSchema = z.object({
+  model: z.string().default('—'),
+  pitchM: z.number().positive(),
+  rotorInertiaKgM2: z.number().positive(),
+  j: z.array(z.number()).min(2),
+  ct: z.array(z.number()).min(2),
+  cp: z.array(z.number()).min(2),
+  estimate: z.boolean().default(true),
+});
+
+export const fdmSchema = z.object({
+  prop: propSchema,
+  motor: z.object({
+    model: z.string().default('—'),
+    kvRpmPerV: z.number().positive(),
+    resistanceOhm: z.number().positive(),
+    noLoadCurrentA: z.number().nonnegative(),
+    maxCurrentA: z.number().positive(),
+    thermalMassJPerK: z.number().positive().default(400),
+    thermalResistanceKPerW: z.number().positive().default(0.35),
+    maxTempC: z.number().default(120),
+    estimate: z.boolean().default(true),
+  }),
+  esc: z.object({
+    model: z.string().default('—'),
+    maxContinuousCurrentA: z.number().positive(),
+    resistanceOhm: z.number().nonnegative().default(0.003),
+    maxTempC: z.number().default(90),
+    estimate: z.boolean().default(true),
+  }),
+  battery: z.object({
+    model: z.string().default('—'),
+    cellsS: z.number().int().positive(),
+    cellsP: z.number().int().positive(),
+    cellCapacityAh: z.number().positive(),
+    cellNominalV: z.number().positive(),
+    cellFullV: z.number().positive(),
+    cellCutoffV: z.number().positive(),
+    cellResistanceOhm: z.number().positive(),
+    maxContinuousC: z.number().positive(),
+    peakC: z.number().positive(),
+    /** Open-circuit voltage per cell vs state of charge (0..1). */
+    ocvSoc: z.array(z.number()).min(2),
+    ocvV: z.array(z.number()).min(2),
+    /** Minimum state of charge kept as reserve (0.15 = land with 15 %). */
+    reserveSoc: z.number().min(0).max(0.9).default(0.15),
+    lowCellV: z.number().default(3.3),
+    criticalCellV: z.number().default(3.1),
+    armCellV: z.number().default(4.0),
+    estimate: z.boolean().default(true),
+  }),
+  hingeActuator: z.object({
+    type: z.string().default('—'),
+    rateDegS: z.number().positive(),
+    maxTorqueNm: z.number().positive(),
+    estimate: z.boolean().default(true),
+  }),
+  /** 2D section data used by the strip-theory aerodynamic model. */
+  section: z.object({
+    liftSlopePerRad: z.number().positive().default(6.0),
+    alphaZeroLiftDeg: z.number().default(-4),
+    clMax: z.number().positive().default(1.5),
+    cd0: z.number().positive().default(0.009),
+    cm0: z.number().default(-0.09),
+    cd90: z.number().positive().default(1.3),
+  }),
+  /** Target maximum L/D used to calibrate the parasite drag of fuselage + nacelles (optional). */
+  targetMaxLD: z.number().positive().optional(),
+  transition: z.object({
+    /** Airspeed at which the wing is fully open (fold = 0). */
+    openCompleteSpeedMs: z.number().positive(),
+    /** Minimum fixed-wing airspeed (ArduPilot ARSPD_FBW_MIN). */
+    fbwMinSpeedMs: z.number().positive(),
+    /** Q_ASSIST_SPEED: below this airspeed in fixed-wing flight VTOL assistance would engage. */
+    assistSpeedMs: z.number().positive(),
+    /** Wing opening fraction commanded at the start of the forward transition (needed to accelerate). */
+    initialOpenFraction: z.number().min(0).max(1).default(0.35),
+    estimate: z.boolean().default(true),
+  }),
+  missionDefault: z.object({
+    hoverHeightM: z.number().positive(),
+    cruiseAltitudeM: z.number().positive(),
+    cruiseSpeedMs: z.number().positive(),
+    takeoffHoverS: z.number().nonnegative(),
+    landingHoverS: z.number().nonnegative(),
+    /** Waypoints as [north, east] metres from the launch point; the mission returns to launch. */
+    waypointsM: z.array(z.tuple([z.number(), z.number()])).min(1),
+  }),
+});
+export type FdmSpec = z.infer<typeof fdmSchema>;
+
 export const productSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -83,6 +177,28 @@ export const productSchema = z.object({
     fuselageLengthM: z.number().positive(),
     fuselageDiameterM: z.number().positive(),
     landingGearHeightM: z.number().positive().default(0.4),
+    /** Reference wing area override (e.g. including the fuselage carry-through). Default: trapezoid. */
+    wingAreaM2: z.number().positive().optional(),
+    /** x of the wing quarter-chord line (body frame). Default: hinge x. */
+    wingQcXM: z.number().optional(),
+    incidenceDeg: z.number().default(2.5),
+    aileron: z.object({
+      startYM: z.number().positive(),
+      endYM: z.number().positive(),
+      chordFraction: z.number().min(0.05).max(0.5),
+      maxDeflectionDeg: z.number().positive().default(25),
+    }).optional(),
+    tail: z.object({
+      type: z.enum(['v', 'conventional']),
+      /** Total true area of both panels. */
+      areaM2: z.number().positive(),
+      dihedralDeg: z.number(),
+      quarterChordXM: z.number(),
+      rootYM: z.number().default(0),
+      panelSpanM: z.number().positive(),
+      controlChordFraction: z.number().min(0.05).max(0.6).default(0.3),
+      maxDeflectionDeg: z.number().positive().default(25),
+    }).optional(),
     hinge: hingeSchema,
     rotors: z.array(rotorSchema).min(2),
     estimate: z.boolean().default(true),
@@ -99,6 +215,9 @@ export const productSchema = z.object({
     figureOfMerit: z.number().min(0.3).max(0.9),
     propEfficiency: z.number().min(0.3).max(0.95),
     motorEscEfficiency: z.number().min(0.5).max(1),
+    /** Propeller efficiency multiplier when all 4 lightly loaded props run in cruise. */
+    fourMotorEtaFactor: z.number().min(0.2).max(1).default(0.92),
+    defaultCruiseMotors: z.union([z.literal(2), z.literal(4)]).default(2),
     estimate: z.boolean().default(true),
   }),
   energy: z.object({
@@ -116,6 +235,8 @@ export const productSchema = z.object({
   }),
   parts: z.array(partSchema).min(1),
   payloadOptions: z.array(payloadOptionSchema),
+  /** Data for the 6-DOF flight dynamics model (mission simulation). */
+  fdm: fdmSchema.optional(),
 });
 
 export const scenarioSchema = z.object({

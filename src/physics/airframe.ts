@@ -1,11 +1,11 @@
 /** Geometric aero quantities derived from the product data and the fold state. */
 import { Vector3 } from 'three';
 import type { Product } from '../data/schema';
-import { exposedSemiSpanM, foldPoint, foldQuaternion, hingePivot } from '../kinematics/hinge';
+import { chordAt, exposedSemiSpanM, foldPoint, foldQuaternion, hingePivot, wingQcX } from '../kinematics/hinge';
 
 /** Reference (gross trapezoidal) wing area, m². */
 export function wingAreaM2(p: Product) {
-  return (p.geometry.spanM * (p.geometry.chordRootM + p.geometry.chordTipM)) / 2;
+  return p.geometry.wingAreaM2 ?? (p.geometry.spanM * (p.geometry.chordRootM + p.geometry.chordTipM)) / 2;
 }
 
 export function aspectRatio(p: Product) {
@@ -14,7 +14,7 @@ export function aspectRatio(p: Product) {
 
 /** Exposed area of one wing panel (hinge to tip). */
 export function wingPanelAreaM2(p: Product) {
-  return (exposedSemiSpanM(p) * (p.geometry.chordRootM + p.geometry.chordTipM)) / 2;
+  return (exposedSemiSpanM(p) * (chordAt(p, 0) + p.geometry.chordTipM)) / 2;
 }
 
 /** Vertical tail / fin area assumed as 6 % of the wing reference area. */
@@ -45,11 +45,16 @@ function elements(p: Product, foldDeg: number): AreaElement[] {
     },
     { areaM2: FIN_AREA_FRACTION * wingAreaM2(p), normal: new Vector3(0, 0, 1), centroid: new Vector3(-L / 2 + 0.2 * L, D * 0.9, 0) },
   ];
+  // fixed centre section between the hinges (horizontal plate)
+  const hz = Math.abs(g.hinge.positionM[2]);
+  if (hz > D / 2 + 0.05) {
+    els.push({ areaM2: 2 * (hz - D / 2) * g.chordRootM, normal: new Vector3(0, 1, 0), centroid: new Vector3(wingQcX(p), g.hinge.positionM[1], 0) });
+  }
   const semi = exposedSemiSpanM(p);
   for (const side of ['L', 'R'] as const) {
     const pivot = hingePivot(g.hinge, side);
     const q = foldQuaternion(g.hinge, side, foldDeg);
-    const centroidCruise = new Vector3(pivot.x - 0.15 * g.chordRootM, pivot.y, pivot.z + (side === 'R' ? 1 : -1) * 0.45 * semi);
+    const centroidCruise = new Vector3(wingQcX(p) - 0.15 * g.chordRootM, pivot.y, pivot.z + (side === 'R' ? 1 : -1) * 0.45 * semi);
     els.push({
       areaM2: wingPanelAreaM2(p),
       normal: new Vector3(0, 1, 0).applyQuaternion(q),

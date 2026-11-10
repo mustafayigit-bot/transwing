@@ -11,7 +11,7 @@ import {
   MeshStandardMaterial, Plane, Quaternion, SphereGeometry, Vector3, type Mesh,
 } from 'three';
 import type { Part, PayloadOption, Product } from '../data/schema';
-import { exposedSemiSpanM, foldQuaternion, hingeAxis, hingePivot, rotorHubCruise } from '../kinematics/hinge';
+import { chordAtY, exposedSemiSpanM, foldQuaternion, hingeAxis, hingePivot, rotorHubCruise, wingQcX } from '../kinematics/hinge';
 import { bladeGeometry, fuselageGeometry, loftAirfoil, noseGeometry } from './geometry';
 import { GROUP_COLORS, KIND_COLORS } from './materials';
 
@@ -52,7 +52,7 @@ export function partCenter(product: Product, part: Part): Vector3 {
   if (part.kind === 'wing') {
     const side = part.attach === 'wingL' ? 'L' : 'R';
     const pv = hingePivot(product.geometry.hinge, side);
-    return new Vector3(pv.x - 0.2 * product.geometry.chordRootM, pv.y, pv.z + (side === 'R' ? 1 : -1) * 0.5 * exposedSemiSpanM(product));
+    return new Vector3(wingQcX(product) - 0.2 * product.geometry.chordRootM, pv.y, pv.z + (side === 'R' ? 1 : -1) * 0.5 * exposedSemiSpanM(product));
   }
   return new Vector3(...part.positionM);
 }
@@ -185,14 +185,34 @@ function WingMesh({ product, side, mat, hl }: { product: Product; side: 'L' | 'R
     const g = product.geometry;
     const pv = hingePivot(g.hinge, side);
     const tipZ = (side === 'R' ? 1 : -1) * (g.spanM / 2);
-    const sec = (z: number, c: number) => ({ le: new Vector3(pv.x + 0.25 * c, pv.y, z), chord: c });
-    return loftAirfoil([sec(pv.z, g.chordRootM), sec(tipZ, g.chordTipM)], g.airfoil, { flip: side === 'L' });
+    const xq = wingQcX(product);
+    const sec = (z: number, c: number) => ({ le: new Vector3(xq + 0.25 * c, pv.y, z), chord: c });
+    return loftAirfoil([sec(pv.z, chordAtY(product, pv.z)), sec(tipZ, g.chordTipM)], g.airfoil, { flip: side === 'L' });
   }, [product, side]);
   useEffect(() => () => geom.dispose(), [geom]);
   return (
     <mesh geometry={geom} material={mat} castShadow receiveShadow>
       {hl}
     </mesh>
+  );
+}
+
+/** Fixed centre section between the two hinges (wing carry-through). */
+function CenterWingMesh({ product, mat, hl }: { product: Product; mat: Material; hl: ReactNode }) {
+  const geoms = useMemo(() => {
+    const g = product.geometry;
+    const pv = hingePivot(g.hinge, 'R');
+    const xq = wingQcX(product);
+    const sec = (z: number) => ({ le: new Vector3(xq + 0.25 * chordAtY(product, z), pv.y, z), chord: chordAtY(product, z) });
+    return [loftAirfoil([sec(0), sec(pv.z)], g.airfoil), loftAirfoil([sec(0), sec(-pv.z)], g.airfoil, { flip: true })];
+  }, [product]);
+  useEffect(() => () => geoms.forEach((g) => g.dispose()), [geoms]);
+  return (
+    <>
+      {geoms.map((g, i) => (
+        <mesh key={i} geometry={g} material={mat} castShadow>{i === 0 ? hl : null}</mesh>
+      ))}
+    </>
   );
 }
 
@@ -216,6 +236,31 @@ function TailMesh({ product, mat, hl }: { product: Product; mat: Material; hl: R
     const g = product.geometry;
     const L = g.fuselageLengthM;
     const D = g.fuselageDiameterM;
+    const t = g.tail;
+    if (t) {
+      // data-driven tail: two panels with the given dihedral (V-tail) or a flat stabiliser + fin
+      const gam = (t.dihedralDeg * Math.PI) / 180;
+      const cMean = t.areaM2 / 2 / t.panelSpanM;
+      const cr = cMean * 1.2, ct = cMean * 0.8;
+      const panel = (s: 1 | -1) => {
+        const flat = loftAirfoil(
+          [
+            { le: new Vector3(t.quarterChordXM + 0.25 * cr, 0, 0), chord: cr },
+            { le: new Vector3(t.quarterChordXM + 0.25 * ct, 0, s * t.panelSpanM), chord: ct },
+          ],
+          '0010',
+          { flip: s === -1 },
+        );
+        flat.rotateX(-s * gam);
+        flat.translate(0, t.rootYM, s * 0.02);
+        return flat;
+      };
+      const out = [panel(1), panel(-1)];
+      if (t.type === 'conventional') {
+        out.push(loftAirfoil([{ le: new Vector3(t.quarterChordXM + 0.25 * cr, t.rootYM, 0), chord: cr }, { le: new Vector3(t.quarterChordXM, t.rootYM + 0.8 * t.panelSpanM, 0), chord: ct }], '0010', { vertical: true }));
+      }
+      return out;
+    }
     const rootC = 0.18 * L;
     const xLe = -L / 2 + rootC + 0.02 * L;
     const finH = 0.16 * L + 0.4 * D;
@@ -430,6 +475,7 @@ function renderPart(part: Part, product: Product, ap: AircraftProps, mat: Materi
     case 'fuselage': return <FuselageMesh product={product} mat={mat} hl={hl} />;
     case 'nose': return <NoseMesh product={product} mat={mat} hl={hl} />;
     case 'tail': return <TailMesh product={product} mat={mat} hl={hl} />;
+    case 'centerwing': return <CenterWingMesh product={product} mat={mat} hl={hl} />;
     case 'wing': return <WingMesh product={product} side={part.attach === 'wingL' ? 'L' : 'R'} mat={mat} hl={hl} />;
     case 'hinge': return <HingeMesh product={product} part={part} mat={mat} hl={hl} />;
     case 'nacelle': return <NacelleMesh product={product} part={part} mat={mat} hl={hl} />;

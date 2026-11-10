@@ -4,7 +4,7 @@ import type { TurbulenceLevel, FlightMode } from '../physics/types';
 
 const TURB: TurbulenceLevel[] = ['none', 'light', 'moderate', 'severe'];
 const MODES: FlightMode[] = ['hover', 'transition', 'cruise'];
-const TABS: Tab[] = ['config', 'compare', 'envelope', 'matrix'];
+const TABS: Tab[] = ['config', 'mission', 'compare', 'envelope', 'matrix'];
 
 export function encodeState(s: AppState): string {
   const q = new URLSearchParams();

@@ -57,17 +57,29 @@ export function exposedSemiSpanM(product: Product): number {
   return product.geometry.spanM / 2 - Math.abs(product.geometry.hinge.positionM[2]);
 }
 
-/** Wing chord at a span fraction (0 = root at the hinge, 1 = tip), linear taper. */
-export function chordAt(product: Product, spanFraction: number): number {
+/** Wing chord at a spanwise station y (from the centreline), linear taper root → tip. */
+export function chordAtY(product: Product, yM: number): number {
   const g = product.geometry;
-  return g.chordRootM + (g.chordTipM - g.chordRootM) * spanFraction;
+  const eta = Math.min(1, Math.max(0, Math.abs(yM) / (g.spanM / 2)));
+  return g.chordRootM + (g.chordTipM - g.chordRootM) * eta;
+}
+
+/** Wing chord at a span fraction of the folding panel (0 = at the hinge, 1 = tip). */
+export function chordAt(product: Product, spanFraction: number): number {
+  const z0 = Math.abs(product.geometry.hinge.positionM[2]);
+  return chordAtY(product, z0 + spanFraction * exposedSemiSpanM(product));
+}
+
+/** x of the wing quarter-chord line (straight, unswept). */
+export function wingQcX(product: Product): number {
+  return product.geometry.wingQcXM ?? product.geometry.hinge.positionM[0];
 }
 
 /** Rotor hub position in cruise frame (prop plane ahead of quarter-chord by hubOffsetM). */
 export function rotorHubCruise(product: Product, rotor: Rotor): Vector3 {
   const pivot = hingePivot(product.geometry.hinge, rotor.wing);
   const r = rotor.spanFraction * exposedSemiSpanM(product);
-  return new Vector3(pivot.x + rotor.hubOffsetM, pivot.y, pivot.z + (rotor.wing === 'R' ? r : -r));
+  return new Vector3(wingQcX(product) + rotor.hubOffsetM, pivot.y, pivot.z + (rotor.wing === 'R' ? r : -r));
 }
 
 export function rotorHub(product: Product, rotor: Rotor, foldDeg: number): Vector3 {

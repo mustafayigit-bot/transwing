@@ -1,20 +1,27 @@
 /** Runs simulations and envelope sweeps in a Web Worker so the UI never blocks. */
 import type { EnvelopeInput, EnvelopeResult } from '../physics/envelope';
+import type { MissionTrace } from '../physics/fdm/mission';
+import type { AnalysisReport } from '../physics/fdm/trim';
 import type { SimInput, SimTrace } from '../physics/sim';
+import type { AnalysisRequest, MissionRequest } from '../workers/sim.worker';
 import type { Result } from '../physics/types';
 import { payloadById } from '../physics/massProps';
 import { useApp } from '../store/app';
 
 let worker: Worker | null = null;
 let nextId = 1;
-const pending = new Map<number, { resolve: (t: unknown) => void; reject: (e: Error) => void }>();
+const pending = new Map<number, { resolve: (t: unknown) => void; reject: (e: Error) => void; onProgress?: (f: number, phase: number) => void }>();
 
 function getWorker(): Worker {
   if (!worker) {
     worker = new Worker(new URL('../workers/sim.worker.ts', import.meta.url), { type: 'module' });
-    worker.onmessage = (e: MessageEvent<{ id: number; result?: unknown; error?: string }>) => {
+    worker.onmessage = (e: MessageEvent<{ id: number; result?: unknown; error?: string; progress?: number; phase?: number }>) => {
       const p = pending.get(e.data.id);
       if (!p) return;
+      if (e.data.progress !== undefined) {
+        p.onProgress?.(e.data.progress, e.data.phase ?? 0);
+        return;
+      }
       pending.delete(e.data.id);
       if (e.data.error) p.reject(new Error(e.data.error));
       else p.resolve(e.data.result);
@@ -23,16 +30,18 @@ function getWorker(): Worker {
   return worker;
 }
 
-function call<T>(kind: 'sim' | 'envelope', input: unknown): Promise<T> {
+function call<T>(kind: 'sim' | 'envelope' | 'mission' | 'analysis', input: unknown, onProgress?: (f: number, phase: number) => void): Promise<T> {
   const id = nextId++;
   return new Promise<T>((resolve, reject) => {
-    pending.set(id, { resolve: resolve as (t: unknown) => void, reject });
+    pending.set(id, { resolve: resolve as (t: unknown) => void, reject, onProgress });
     getWorker().postMessage({ id, kind, input });
   });
 }
 
 export const runSimulation = (input: SimInput) => call<SimTrace>('sim', input);
 export const runEnvelope = (inputs: EnvelopeInput[]) => call<Result<EnvelopeResult>[]>('envelope', inputs);
+export const runMission = (req: MissionRequest, onProgress?: (f: number, phase: number) => void) => call<MissionTrace>('mission', req, onProgress);
+export const runAnalysis = (req: AnalysisRequest) => call<AnalysisReport>('analysis', req);
 
 /** Build the simulation input from the current app state for a product/payload. */
 export function currentSimInput(productId?: string, payloadId?: string): SimInput | null {

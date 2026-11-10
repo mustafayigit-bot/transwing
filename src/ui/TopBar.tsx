@@ -8,6 +8,7 @@ import { Btn } from './common';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'config', label: 'Konfigüratör' },
+  { id: 'mission', label: 'Görev simülasyonu (6-DOF)' },
   { id: 'compare', label: 'Karşılaştırma' },
   { id: 'envelope', label: 'Operasyonel zarf' },
   { id: 'matrix', label: 'Ürün matrisi' },

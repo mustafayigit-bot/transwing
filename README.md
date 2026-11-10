@@ -21,6 +21,60 @@ Yığın: React 18 + TypeScript + Vite, Three.js (@react-three/fiber, @react-thr
 Tailwind, recharts, zod. Fizik `src/physics/` altında React'ten bağımsız saf TypeScript'tir;
 zaman alanı simülasyonu ve zarf taramaları Web Worker'da (`src/workers/sim.worker.ts`) çalışır.
 
+## Faz 1 — 6-DOF görev simülasyonu (yeni)
+
+**Görev simülasyonu (6-DOF)** sekmesi, referans ürün **Transwing 4.0 (TW4)** ve ondan ölçeklenen aile için
+kalkış → hover → ileri geçiş → tırmanış → waypoint seyri → alçalma → geri geçiş → hover → iniş görevini
+baştan sona simüle eder (76 km'lik görev ≈ 15–30 s, Web Worker'da).
+
+- `src/physics/fdm/vlm.ts` — açık kanadın düzlemsel vortex-lattice çözümü (CLα, açıklık boyunca yükleme).
+- `src/physics/fdm/model.ts` — şeritler (orta kanat, katlanan paneller, V-kuyruk), rotorlar, katlanma
+  açısına göre CG / atalet tablosu.
+- `src/physics/fdm/forces.ts` — şerit aerodinamiği (±180° kesit modeli), pervane akımı, kanat iniş akımı,
+  CT/CP(J) pervane haritası, DC motor + ESC, menteşe momenti.
+- `src/physics/fdm/trim.ts` — düz uçuş ve hover trimi, parazit sürüklenme kalibrasyonu, kararlılık /
+  kontrol türevleri, dinamik modlar.
+- `src/physics/fdm/mission.ts` — RK4 (dt = 0,01 s) görev simülasyonu, QuadPlane-benzeri kontrolcü,
+  kontrol dağıtımı, batarya (OCV + R + RC), motor/ESC ısıl modeli, olay / alarm kaydı, ~70 telemetri kanalı.
+
+Sekmede: görev editörü (irtifa, hız, hover süreleri, waypoint'ler, 4 ↔ 2 motor seyir), 3B takip görünümü,
+mini harita, faz zaman çizelgesi, çift grafik (14 hazır kanal grubu), sonuç kartları, faz bazında enerji,
+olay listesi, telemetri CSV / özet JSON dışa aktarma ve **trim + kararlılık analizi** paneli.
+
+### Transwing 4.0 verisi ve varsayımlar
+
+Tasarım ekibinden gelen değerler `estimate: false` ile, eksik olanlar `estimate: true` ile işaretlidir
+(`scripts/generate-specs.ts`). Önemli **varsayımlar** (CAD paketi — Faz 3 — gelince değişecek):
+
+1. **Menteşe kinematiği:** hover'da panel 65° geriye süpürülür, itki ekseni dikeydir (`designHingeForSweep(65)`).
+2. **Alçak kanat yerleşimi** (menteşe y = −0,06 m): pervane itki hattı düşey CG'ye yakın. Yüksek kanat
+   varsayımıyla itki hattı CG'nin 0,15–0,35 m üstünde kalır ve kanat ≈ %60'tan fazla açıldığında hiçbir rotor
+   burun-yukarı moment üretemez; ileri geçiş diferansiyel itkiyle trimlenemez (**geçiş koridoru**).
+3. Pervane haritası geneldir (CT0 = 0,105, CP0 = 0,036, sıfır itki J ≈ 0,72) — Lighter GFFA 28×13 test
+   verisi gerekir. Motor iç direnci, boşta akımı ve azami akımı (180 A) tahmindir.
+4. Kütle grubu toplamları ekip verisidir; grup içi dağılım ve tüm parça konumları tahmindir. Batarya konumu
+   seyirde %10 MAC statik marj verecek şekilde seçilir.
+5. Parazit sürüklenme, ekibin (L/D)max = 18,07 değerine kalibre edilir; CLmax 1,4 → Vs ≈ 20 m/s.
+
+### Model bulguları (TW4, 40 kg, deniz seviyesi, ISA) — tahmini
+
+- Seyir (23,7 m/s): 4 motorla ≈ 1,38 kW, 2 motorla ≈ 0,89 kW elektrik gücü. 22 N itki için 28" pervaneler
+  çok hafif yüklü kalır (pervane verimi ≈ %42 ↔ %64).
+- Hover ≈ 8,2 kW (≈ 2,8 C): iç (ön) rotorlar ağırlığın ≈ %75'ini taşır (175 N ↔ 58 N) ve iç rotor akımı
+  orta kanat üzerinde ≈ 75 N download üretir. 6 dakikalık hover ≈ 820 Wh.
+- 76 km'lik görev (6 dk hover dahil): 4 motorla ≈ 2,13 kWh, son SoC ≈ %28; 2 motorla ≈ 1,70 kWh, son SoC ≈ %44.
+- Seyir hızı stall'ın yalnızca %17 üstünde: güvenli yatış ≈ 25–28° ile sınırlı; türbülansta stall /
+  Q_ASSIST uyarıları görülür.
+- Statik marj %10 MAC; Cnβ ≈ 0,06 (düşük), spiral modu kararsız (T₂ ≈ 6 s) — otopilot gerektirir.
+- Hover'da yan rüzgâr: pervane akımı içindeki dikey paneller büyük yan kuvvet üretir; ≈ 8 m/s yan rüzgârda
+  kontrol kaybı. Simülasyon bu yüzden rüzgâra burun çevirir (weathervane), ileri ve geri geçişi rüzgâra
+  karşı uçar. Şiddetli türbülansta (12 m/s rüzgâr) geri geçiş başarısız olur.
+- Ölçeklenmiş türevlerden T10-M (en ağır) ileri geçişten sonra irtifa tutamaz; ölçek yasaları bu boyutta
+  itki / kanat yükü dengesini korumuyor.
+
+Sınırlar: kontrolcü ideal durum bilgisi kullanır (sensör / EKF modeli Faz 2), ArduPilot'un kendisi değildir
+(Faz 4: SITL köprüsü), katlı konumda aerodinamik etkileşimler ve pervane eğik akış kuvvetleri yaklaşık / ihmal.
+
 ## Özellikler (kısa)
 
 - **Parametrik 3B model**: NACA 4 haneli profil loft'lu taper kanat, gövde + burun konisi, kuyruk,
@@ -79,6 +133,8 @@ alan adları birim sonekli (`spanM`, `massKg`, `powerW` …).
 | `aero.cd0, oswaldE, clMax` | Sürüklenme poları ve maks. kaldırma katsayısı. |
 | `aero.sideCd` | Katlı (hover) gövdenin izdüşüm alanına göre sürüklenme katsayısı. |
 | `parts[]` | `id, name, group` (Airframe/Wing/Propulsion/Energy/Avionics/Payload/Landing), `kind` (prosedürel şekil: fuselage, nose, tail, wing, hinge, nacelle, rotor, battery, avionics, payload, gear, box), `massKg`, `positionM` (cruise konumunda parça CG'si), `sizeM` (kutu parçalar), `attach` (`body` / `wingL` / `wingR` — kanada bağlı parçalar menteşe ile döner), `rotorIndex`, `material`, `bomRef`, `estimate`. Payload grubundaki parçanın kütlesi seçili payload'dan gelir. |
+| `fdm` | 6-DOF veri bloğu: `prop` (CT/CP–J tablosu, hatve, rotor ataleti), `motor` (KV, direnç, boşta ve azami akım, ısıl), `esc`, `battery` (S/P, hücre Ah, OCV tablosu, iç direnç, C limitleri, alarm gerilimleri, rezerv SoC), `hingeActuator` (hız, tork), `section` (kesit kaldırma eğimi, α0, clmax, cd0, cm0), `targetMaxLD`, `transition` (açılma tamamlanma hızı, ARSPD_FBW_MIN, Q_ASSIST_SPEED, başlangıç açılma oranı), `missionDefault`. |
+| `geometry.wingAreaM2, wingQcXM, incidenceDeg, aileron, tail` | Referans alan, çeyrek veter x'i, takılma açısı, aileron istasyonları, V-kuyruk (alan, V açısı, konum, panel açıklığı, kumanda veter oranı). |
 | `payloadOptions[]` | `id, name, massKg, dragAreaM2` (cruise'a eklenen CD·S), `variant`, `shape` (gimbal/lidar/box/pod/antenna), `estimate`. |
 
 ### Menteşe ekseni nasıl ayarlanır
@@ -92,8 +148,8 @@ UI'daki katlanma slider'ı ile sonuç anında görülür.
 
 ### Ürün ailesi ve ölçekleme
 
-`npm run gen:specs` (`scripts/generate-specs.ts`) 7 m referansı (T7-C) ve askeri varyantını yazar,
-5 m / 10 m ürünleri ölçek yasalarıyla türetir (`src/data/scaling.ts`): uzunluk ∝ s, alan ∝ s²,
+`npm run gen:specs` (`scripts/generate-specs.ts`) referans ürün Transwing 4.0'ı (TW4, 4 m) yazar,
+5 m / 7 m / 10 m sivil ve askeri ürünleri ölçek yasalarıyla türetir (`src/data/scaling.ts`): uzunluk ∝ s, alan ∝ s²,
 kütle ∝ s^2,5, motor gücü ∝ s^2,75 (hover T/W'yi yaklaşık sabit tutar), enerji ∝ kütle. Askeri
 varyantta aviyonik ×2,2, veri linki ×2,5, gövde ×1,1, kablo demeti ×1,3. Üretici, bataryayı hover
 CG'sini rotor itki merkezine yaklaştıracak konuma koyar (gövde sınırında kırpılır). Gerçek verileri

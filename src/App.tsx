@@ -11,6 +11,7 @@ import { ComparePage } from './ui/ComparePage';
 import { EnvelopePage } from './ui/EnvelopePage';
 import { LeftPanel } from './ui/LeftPanel';
 import { MatrixPage } from './ui/MatrixPage';
+import { MissionPage } from './ui/MissionPage';
 import { PartCard } from './ui/PartCard';
 import { RightPanel } from './ui/RightPanel';
 import { TopBar } from './ui/TopBar';
@@ -29,7 +30,7 @@ async function loadSpecs() {
     }
     const st = useApp.getState();
     const ref = specs.products.find((p) => p.id === specs.referenceProductId) ?? specs.products[0];
-    useApp.setState({ specs, issues, productId: ref.id, payloadId: ref.payloadOptions[0]?.id ?? 'none', foldDeg: foldForMode(st.flightMode, ref.geometry.hinge.maxFoldDeg) });
+    useApp.setState({ specs, issues, productId: ref.id, payloadId: ref.payloadOptions[0]?.id ?? 'none', cruiseMotors: ref.propulsion.defaultCruiseMotors, foldDeg: foldForMode(st.flightMode, ref.geometry.hinge.maxFoldDeg) });
     if (window.location.hash.length > 1) {
       const patch = decodeState(window.location.hash, useApp.getState());
       useApp.setState(patch);
@@ -155,6 +156,7 @@ export default function App() {
         )}
         {tab !== 'config' && (
           <div className="min-w-0 flex-1">
+            {tab === 'mission' && <MissionPage />}
             {tab === 'compare' && <ComparePage />}
             {tab === 'envelope' && <EnvelopePage />}
             {tab === 'matrix' && <MatrixPage />}
