@@ -5,6 +5,7 @@ import type { AnalysisReport } from '../physics/fdm/trim';
 import type { SimInput, SimTrace } from '../physics/sim';
 import type { AnalysisRequest, MissionRequest } from '../workers/sim.worker';
 import type { Result } from '../physics/types';
+import type { MonteCarloResult } from '../telemetry/stats';
 import { payloadById } from '../physics/massProps';
 import { useApp } from '../store/app';
 
@@ -30,7 +31,7 @@ function getWorker(): Worker {
   return worker;
 }
 
-function call<T>(kind: 'sim' | 'envelope' | 'mission' | 'analysis', input: unknown, onProgress?: (f: number, phase: number) => void): Promise<T> {
+function call<T>(kind: 'sim' | 'envelope' | 'mission' | 'analysis' | 'montecarlo', input: unknown, onProgress?: (f: number, phase: number) => void): Promise<T> {
   const id = nextId++;
   return new Promise<T>((resolve, reject) => {
     pending.set(id, { resolve: resolve as (t: unknown) => void, reject, onProgress });
@@ -41,6 +42,7 @@ function call<T>(kind: 'sim' | 'envelope' | 'mission' | 'analysis', input: unkno
 export const runSimulation = (input: SimInput) => call<SimTrace>('sim', input);
 export const runEnvelope = (inputs: EnvelopeInput[]) => call<Result<EnvelopeResult>[]>('envelope', inputs);
 export const runMission = (req: MissionRequest, onProgress?: (f: number, phase: number) => void) => call<MissionTrace>('mission', req, onProgress);
+export const runMonteCarlo = (req: MissionRequest & { runs: number }, onProgress?: (f: number, phase: number) => void) => call<MonteCarloResult>('montecarlo', req, onProgress);
 export const runAnalysis = (req: AnalysisRequest) => call<AnalysisReport>('analysis', req);
 
 /** Build the simulation input from the current app state for a product/payload. */

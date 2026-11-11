@@ -7,7 +7,10 @@ import type { AnalysisReport, TrimPoint } from '../physics/fdm/trim';
 import { MissionViewer } from '../scene/MissionViewer';
 import { useApp } from '../store/app';
 import { useCurrentProduct, usePayload } from '../store/results';
+import { synthesizeTelemetry } from '../telemetry/sensors';
+import type { MissionRequest } from '../workers/sim.worker';
 import { AssumptionList, Btn, EstimateBadge, Section, Select, Slider, STATUS_STYLES, fmt } from './common';
+import { TelemetryPanel } from './TelemetryPanel';
 
 const COLORS = ['#38bdf8', '#f472b6', '#a3e635', '#fb923c', '#c084fc', '#facc15', '#2dd4bf', '#f87171'];
 const PHASE_COLORS = ['#64748b', '#f59e0b', '#ec4899', '#22c55e', '#0ea5e9', '#14b8a6', '#a855f7', '#f59e0b', '#64748b', '#334155'];
@@ -37,6 +40,12 @@ const presets = (n: number): Preset[] => [
   { id: 'wind', label: 'Rüzgâr (K / D / yukarı)', left: ['windN', 'windE', 'windU'], leftUnit: 'm/s' },
   { id: 'nav', label: 'Güdüm: rota sapması', left: ['xtrack'], right: ['wpDist'], leftUnit: 'm', rightUnit: 'm' },
   { id: 'load', label: 'Yük faktörü ve CL', left: ['nz'], right: ['cl', 'stall'], leftUnit: 'g', rightUnit: '–' },
+  { id: 'bend', label: 'Kanat kökü eğilme momenti', left: ['bendL', 'bendR'], right: ['nz'], leftUnit: 'N·m', rightUnit: 'g' },
+  { id: 'vibe', label: 'Titreşim (VIBE)', left: ['vibeX', 'vibeY', 'vibeZ'], leftUnit: 'm/s²' },
+  { id: 'imuA', label: 'IMU ivmeölçer (FRD)', left: ['accX', 'accY', 'accZ'], leftUnit: 'm/s²' },
+  { id: 'imuG', label: 'IMU jiroskop', left: ['gyrX', 'gyrY', 'gyrZ'], leftUnit: 'rad/s' },
+  { id: 'altS', label: 'İrtifa sensörleri: gerçek / GPS / baro', left: ['alt', 'gpsAlt', 'baroAlt'], right: ['gpsErrH'], leftUnit: 'm', rightUnit: 'm' },
+  { id: 'asS', label: 'Hava hızı: gerçek / pitot', left: ['ias', 'arspd'], leftUnit: 'm/s' },
 ];
 
 function MissionChart({ trace, preset, window, cursor }: { trace: MissionTrace; preset: Preset; window: [number, number]; cursor: number }) {
@@ -237,6 +246,9 @@ export function MissionPage() {
     return () => cancelAnimationFrame(raf.current);
   }, [playing, speed, trace, tEnd]);
 
+  const tel = useMemo(() => (trace && product ? synthesizeTelemetry(trace, product) : null), [trace, product]);
+  const traceX = useMemo(() => (trace && tel ? { ...trace, ch: { ...trace.ch, ...tel.ch } } : trace), [trace, tel]);
+
   if (!product) return null;
   if (!product.fdm) return <div className="p-6 text-sm text-slate-300">Bu ürün için 6-DOF veri bloğu (<code>fdm</code>) tanımlı değil.</div>;
   const hz = trace ? 1 / Math.max(1e-6, trace.ch.t[1] - trace.ch.t[0]) : 10;
@@ -244,20 +256,19 @@ export function MissionPage() {
   const ps = presets(product.geometry.rotors.length);
   const window_: [number, number] = win ?? [0, tEnd];
 
+  const buildRequest = (): MissionRequest => ({
+    product, payload,
+    config: {
+      ...cfg, waypointsM: wps.map(([n, e]) => [n * 1000, e * 1000] as [number, number]), cruiseMotors: s.cruiseMotors, env: s.env, seed: s.sim.seed,
+      gustStartS: s.sim.gustStartS, gustDurationS: s.sim.gustDurationS, initialSoc: s.batterySoc,
+      cdaFront: trace?.cdaFront ?? (s.analysis?.productId === product.id ? s.analysis.calibration.cdaFrontM2 : undefined),
+    },
+  });
   const run = async () => {
     s.set({ missionRunning: true, missionProgress: 0, missionError: null });
     setPlaying(false);
     try {
-      const res = await runMission(
-        {
-          product, payload,
-          config: {
-            ...cfg, waypointsM: wps.map(([n, e]) => [n * 1000, e * 1000] as [number, number]), cruiseMotors: s.cruiseMotors, env: s.env, seed: s.sim.seed,
-            gustStartS: s.sim.gustStartS, gustDurationS: s.sim.gustDurationS, initialSoc: s.batterySoc, cdaFront: s.analysis?.productId === product.id ? s.analysis.calibration.cdaFrontM2 : undefined,
-          },
-        },
-        (f, ph) => useApp.setState({ missionProgress: f, missionPhase: ph }),
-      );
+      const res = await runMission(buildRequest(), (f, ph) => useApp.setState({ missionProgress: f, missionPhase: ph }));
       s.set({ mission: res, missionRunning: false });
       setT(0);
       setWin(null);
@@ -424,7 +435,7 @@ export function MissionPage() {
                 {[[presetId, setPresetId] as const, [presetId2, setPresetId2] as const].map(([id, set], k) => (
                   <div key={k} className="flex min-h-0 flex-col">
                     <Select<string> value={id} onChange={set} options={ps.map((p) => ({ value: p.id, label: p.label }))} />
-                    <div className="min-h-0 flex-1"><MissionChart trace={trace} preset={ps.find((p) => p.id === id) ?? ps[0]} window={window_} cursor={t} /></div>
+                    <div className="min-h-0 flex-1"><MissionChart trace={traceX ?? trace} preset={ps.find((p) => p.id === id) ?? ps[0]} window={window_} cursor={t} /></div>
                   </div>
                 ))}
               </div>
@@ -443,7 +454,8 @@ export function MissionPage() {
 
       {/* ---------------- right: trim & stability ---------------- */}
       <aside className="flex w-80 shrink-0 flex-col overflow-y-auto border-l border-slate-800 bg-slate-950/90">
-        <Section title="Trim, performans ve kararlılık">
+        {trace && tel && <TelemetryPanel product={product} trace={trace} tel={tel} buildRequest={buildRequest} />}
+        <Section title="Trim, performans ve kararlılık" defaultOpen={!trace}>
           <Btn className="w-full" active disabled={s.analysisRunning} onClick={analyse}>{s.analysisRunning ? 'Analiz ediliyor…' : 'Analizi çalıştır (VLM + trim + türevler)'}</Btn>
           {s.analysis && s.analysis.productId === product.id ? <AnalysisPanel a={s.analysis} /> : <p className="text-[11px] text-slate-500">Seyir trim noktası, 4 ↔ 2 motor karşılaştırması, hover rotor yük dağılımı, kararlılık türevleri ve dinamik modlar.</p>}
         </Section>

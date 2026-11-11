@@ -311,6 +311,8 @@ export class GeomState {
   I = new Array<number>(9).fill(0);
   Iinv = new Array<number>(9).fill(0);
   panelCg = [[0, 0, 0], [0, 0, 0]];
+  /** chord axis (cruise +x) of each folding panel in body axes */
+  panelChord = [[1, 0, 0], [1, 0, 0]];
   /** per strip: position rel. CG, chord axis, normal, span axis */
   sp: Float64Array;
   sc: Float64Array;
@@ -346,6 +348,7 @@ export class GeomState {
     for (let q = 0; q < 9; q++) this.Iinv[q] = inv[q];
     const R = [rodrigues(m.axis[0], f), rodrigues(m.axis[1], f)];
     for (let b = 0; b < 2; b++) for (let q = 0; q < 3; q++) this.pivotRel[b][q] = m.pivot[b][q] - this.cg[q];
+    for (let b = 0; b < 2; b++) this.panelChord[b] = mulMV(R[b], [1, 0, 0]);
     m.strips.forEach((st, k) => {
       let p = st.p, c = st.c, n = st.n, s = st.s;
       if (st.body !== 0) {

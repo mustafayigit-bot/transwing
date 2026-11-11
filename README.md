@@ -75,6 +75,54 @@ Tasarım ekibinden gelen değerler `estimate: false` ile, eksik olanlar `estimat
 Sınırlar: kontrolcü ideal durum bilgisi kullanır (sensör / EKF modeli Faz 2), ArduPilot'un kendisi değildir
 (Faz 4: SITL köprüsü), katlı konumda aerodinamik etkileşimler ve pervane eğik akış kuvvetleri yaklaşık / ihmal.
 
+## Faz 2 — Tahmini telemetri (yeni)
+
+Görev simülasyonu bittiğinde sağ panelde **Tahmini telemetri** bölümü açılır (`src/telemetry/`):
+
+- **Sensör modelleri** (`sensors.ts`): IMU (bias + gürültü + rotor 1/dev dengesizlik ve kanat geçiş
+  titreşim tonları + stall/katlanma buffet'i), GPS (Gauss–Markov hata, 5 Hz), baro (sürüklenme), pitot
+  (düşük hızda güvenilmez), ESC, batarya. Seed'li, tekrarlanabilir.
+- **ArduPilot DataFlash `.bin`** (`dataflash.ts`): `PARM MSG MODE ATT POS GPS BARO ARSP BAT ESC RCOU CTUN
+  QTUN NTUN VIBE IMU` + Specter'e özel `HNG` (menteşe açısı / momenti), `LOAD` (yük faktörü, kanat kökü
+  eğilme momenti), `WND`, `PHS`. Mission Planner, MAVExplorer, UAV Log Viewer ve PlotJuggler'da açılır;
+  pymavlink ile hatasız ayrıştırıldığı doğrulandı.
+- **MAVLink `.tlog`** (`mavlink.ts`): HEARTBEAT, SYS_STATUS, ATTITUDE, GLOBAL_POSITION_INT, VFR_HUD,
+  GPS_RAW_INT, SERVO_OUTPUT_RAW, NAV_CONTROLLER_OUTPUT, BATTERY_STATUS, VIBRATION, WIND, STATUSTEXT.
+- **Alarm tablosu**: hücre gerilimi, SoC, C oranı, motor akımı / sıcaklığı, ESC ve hücre sıcaklığı, VIBE
+  (ArduPilot önerisi: < 30 iyi, > 60 kötü), menteşe momenti, Q_ASSIST / stall, yatış, yük faktörü,
+  irtifa hatası — en kötü değer, fazı ve zamanı.
+- **Faz bazında aralıklar**: herhangi bir kanal için faz başına min / ortalama / %95 / maks.
+- **Monte Carlo**: aynı görevi farklı seed'lerle (rüzgâr, türbülans, sensör) 5–40 kez koşar; başarı
+  oranı, sonuç dağılımı, metrik aralıkları ve zaman üzerinde %5–%95 bantları.
+- Görev grafiklerine titreşim, IMU ivme / jiroskop, irtifa sensörleri, pitot ve kanat kökü eğilme
+  momenti grupları eklendi.
+
+Loglar açıkça **simüle edilmiş tahmin** olarak işaretlenir (MSG ve `SIM_SPECTER` parametresi).
+Titreşim genlikleri varsayımdır; ilk gerçek uçuş logu ile kalibre edilmelidir.
+
+### Kontrolcü sağlamlaştırma (Faz 2 sırasında bulunan sorunlar)
+
+Monte Carlo, rüzgârlı koşullarda ileri geçişte kontrol kayıplarını ortaya çıkardı. Düzeltmeler:
+kontrol dağıtımında ArduPilot motor karıştırıcısındaki gibi **öncelik** (yalpa / yunuslama önce,
+toplam itki sonra, sapma en son), geçiş sırasında **kayma açısı geri beslemesi**, uçak alçalırken
+**kanat açılmasını bekletme**, sabit kanatta **düşük hızda hız önceliği, hücum açısı sınırı ve stall
+kurtarma**, geçişten hemen sonra ve alçakta **sınırlı yatış**.
+
+TW4, MTOW, 1,5 km görev, 8 seed başına sonuç (tahmini):
+
+| Rüzgâr / türbülans | Başarı | İleri geçiş irtifa kaybı (maks.) |
+|---|---|---|
+| 0 m/s, yok | 1/1 | 2,5 m |
+| 4 m/s, hafif | 7/8 | 3,6 m |
+| 6 m/s, hafif | 7/8 | 2,6 m |
+| 8 m/s, orta | 8/8 | 3,5 m |
+| 10 m/s, orta | 5/8 | 2,5 m |
+| 12 m/s, şiddetli | 0/8 | 8,0 m |
+
+Kalan kayıplar sabit kanat tırmanışı / alçalmasında türbülans kaynaklı stall'dan geliyor: seyir hızı
+stall'ın yalnızca %17 üstünde olduğu için şiddetli türbülansta marj yetmiyor. Bu, kontrolcüden çok
+tasarım noktasının (seyir hızı / kanat yüklemesi) bir sonucu olarak değerlendirilmeli.
+
 ## Özellikler (kısa)
 
 - **Parametrik 3B model**: NACA 4 haneli profil loft'lu taper kanat, gövde + burun konisi, kuyruk,

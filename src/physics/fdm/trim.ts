@@ -216,15 +216,24 @@ export function trimHover(m: FdmModel, geom: GeomState, rho: number, vBatt: numb
   };
 }
 
-/** Hinge moment incl. the weight / inertial load of the panel (specific force f = F/m, body axes). */
-export function hingeTotal(m: FdmModel, geom: GeomState, out: ForceOutput, specificForce: number[]): number[] {
-  return [0, 1].map((b) => {
+/** Panel loads at the hinge incl. the weight / inertial load of the panel (specific force f = F/m, body axes). */
+export function panelLoads(m: FdmModel, geom: GeomState, out: ForceOutput, specificForce: number[]): { hinge: number[]; bend: number[] } {
+  const hinge: number[] = [], bend: number[] = [];
+  for (let b = 0; b < 2; b++) {
     const r = [geom.panelCg[b][0] - geom.pivotRel[b][0], geom.panelCg[b][1] - geom.pivotRel[b][1], geom.panelCg[b][2] - geom.pivotRel[b][2]];
     const f = specificForce.map((v) => -m.panelMassKg * v);
-    const ax = m.axis[b];
-    const mg = (r[1] * f[2] - r[2] * f[1]) * ax[0] + (r[2] * f[0] - r[0] * f[2]) * ax[1] + (r[0] * f[1] - r[1] * f[0]) * ax[2];
-    return out.hinge[b] + mg;
-  });
+    const mv = [r[1] * f[2] - r[2] * f[1], r[2] * f[0] - r[0] * f[2], r[0] * f[1] - r[1] * f[0]];
+    const ax = m.axis[b], pc = geom.panelChord[b];
+    hinge.push(out.hinge[b] + mv[0] * ax[0] + mv[1] * ax[1] + mv[2] * ax[2]);
+    // sign: positive = tip loaded towards the panel's lift side (left panel +x moment, right panel −x)
+    bend.push((b === 0 ? 1 : -1) * (out.bend[b] + mv[0] * pc[0] + mv[1] * pc[1] + mv[2] * pc[2]));
+  }
+  return { hinge, bend };
+}
+
+/** Hinge moment incl. the weight / inertial load of the panel. */
+export function hingeTotal(m: FdmModel, geom: GeomState, out: ForceOutput, specificForce: number[]): number[] {
+  return panelLoads(m, geom, out, specificForce).hinge;
 }
 
 export interface Derivatives {

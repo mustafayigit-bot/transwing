@@ -3,6 +3,7 @@ import type { Scenario, SpecsFile, ValidationIssue } from '../data/schema';
 import type { MissionTrace } from '../physics/fdm/mission';
 import type { AnalysisReport } from '../physics/fdm/trim';
 import type { SimTrace } from '../physics/sim';
+import type { MonteCarloResult } from '../telemetry/stats';
 import type { Environment, FlightMode } from '../physics/types';
 
 export type Tab = 'config' | 'mission' | 'compare' | 'envelope' | 'matrix';
@@ -68,6 +69,9 @@ export interface AppState {
   missionError: string | null;
   analysis: AnalysisReport | null;
   analysisRunning: boolean;
+  monteCarlo: MonteCarloResult | null;
+  monteCarloRunning: boolean;
+  monteCarloProgress: number;
 
   compareB: { productId: string; payloadId: string };
   envelopeAxis: 'altitude' | 'payload';
@@ -138,6 +142,9 @@ export const useApp = create<AppState>((set, get) => ({
   missionError: null,
   analysis: null,
   analysisRunning: false,
+  monteCarlo: null,
+  monteCarloRunning: false,
+  monteCarloProgress: 0,
   compareB: { productId: '', payloadId: 'none' },
   envelopeAxis: 'altitude',
   envelopeOverlay: true,
@@ -171,6 +178,7 @@ export const useApp = create<AppState>((set, get) => ({
       cruiseMotors: product.propulsion.defaultCruiseMotors,
       mission: null,
       analysis: null,
+      monteCarlo: null,
       foldDeg: foldForMode(st.flightMode, product.geometry.hinge.maxFoldDeg),
       selectedPart: null,
       isolatedPart: null,

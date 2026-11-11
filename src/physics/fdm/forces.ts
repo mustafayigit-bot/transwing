@@ -31,6 +31,8 @@ export interface ForceOutput {
   omegaDot: number[];
   /** moment about the hinge axis from aero + thrust on each panel [L, R] (+ = folding direction) */
   hinge: number[];
+  /** moment about the panel chord axis at the hinge from aero + thrust (root bending, raw sign) */
+  bend: number[];
   /** angular momentum of the rotors, body */
   hRot: number[];
   wingCl: number;
@@ -43,7 +45,7 @@ export function newForceOutput(nRotors: number): ForceOutput {
   const z = () => new Array<number>(nRotors).fill(0);
   return {
     F: [0, 0, 0], M: [0, 0, 0], Faero: [0, 0, 0], Maero: [0, 0, 0], thrust: z(), qAero: z(), qMotor: z(), current: z(), battCurrent: 0,
-    vi: z(), axialSpeed: z(), omegaDot: z(), hinge: [0, 0], hRot: [0, 0, 0], wingCl: 0, stallFraction: 0, alpha: 0, beta: 0,
+    vi: z(), axialSpeed: z(), omegaDot: z(), hinge: [0, 0], bend: [0, 0], hRot: [0, 0, 0], wingCl: 0, stallFraction: 0, alpha: 0, beta: 0,
   };
 }
 
@@ -112,6 +114,7 @@ export function evalForces(m: FdmModel, geom: GeomState, inp: ForceInput, out: F
   const nR = m.rotors.length;
   let Fx = 0, Fy = 0, Fz = 0, Mx = 0, My = 0, Mz = 0;
   out.hinge[0] = 0; out.hinge[1] = 0;
+  out.bend[0] = 0; out.bend[1] = 0;
   out.hRot[0] = 0; out.hRot[1] = 0; out.hRot[2] = 0;
   let battI = 0;
   const motor = m.spec.motor;
@@ -150,6 +153,7 @@ export function evalForces(m: FdmModel, geom: GeomState, inp: ForceInput, out: F
     const pv = geom.pivotRel[b], ax = m.axis[b];
     const rx = hx - pv[0], ry = hy - pv[1], rz = hz - pv[2];
     out.hinge[b] += (ry * fz - rz * fy + mqx) * ax[0] + (rz * fx - rx * fz + mqy) * ax[1] + (rx * fy - ry * fx + mqz) * ax[2];
+    { const pc = geom.panelChord[b]; out.bend[b] += (ry * fz - rz * fy + mqx) * pc[0] + (rz * fx - rx * fz + mqy) * pc[1] + (rx * fy - ry * fx + mqz) * pc[2]; }
   }
   out.battCurrent = battI;
   const Tx = Fx, Ty = Fy, Tz = Fz, TMx = Mx, TMy = My, TMz = Mz;
@@ -221,6 +225,7 @@ export function evalForces(m: FdmModel, geom: GeomState, inp: ForceInput, out: F
       const pv = geom.pivotRel[b], ax = m.axis[b];
       const rx = px - pv[0], ry = py - pv[1], rz = pz - pv[2];
       out.hinge[b] += (ry * fz - rz * fy + mvx) * ax[0] + (rz * fx - rx * fz + mvy) * ax[1] + (rx * fy - ry * fx + mvz) * ax[2];
+      { const pc = geom.panelChord[b]; out.bend[b] += (ry * fz - rz * fy + mvx) * pc[0] + (rz * fx - rx * fz + mvy) * pc[1] + (rx * fy - ry * fx + mvz) * pc[2]; }
     }
     if (st.kind === 0) {
       wingArea += st.area;

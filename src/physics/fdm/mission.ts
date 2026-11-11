@@ -17,7 +17,7 @@ import type { Environment } from '../types';
 import { drydenParams, gaussian, oneMinusCosineGust, windAtHeight } from '../wind';
 import { dutyForOmega, evalForces, newForceOutput, omegaForThrust, propPoint, type ForceOutput } from './forces';
 import { DEG, G, GeomState, interp, mulMV } from './model';
-import { activeMask, hingeTotal, MODEL_ASSUMPTIONS, prepareModel, trimLevel } from './trim';
+import { activeMask, MODEL_ASSUMPTIONS, panelLoads, prepareModel, trimLevel } from './trim';
 
 export interface MissionConfig {
   hoverHeightM: number;
@@ -119,9 +119,9 @@ export const MISSION_ASSUMPTIONS: string[] = [
   'Entegrasyon RK4, dt = 0,01 s; kontrolcü 100 Hz, adım boyunca sabit (ZOH). Yer teması: kalkışa kadar sabit, inişte temas anında durur.',
   'Kontrolcü durumları doğrudan kullanır (ideal kestirim); sensör gürültüsü ve EKF gecikmeleri Faz 2 telemetri modelinde eklenecek.',
   'Kontrol dağıtımı: model tabanlı ağırlıklı sözde-ters (4 rotor itkisi + aileron/elevator/rudder); diferansiyel itki ağırlığı hava hızıyla azaltılır.',
-  'İleri geçiş: kanat açılma oranı = max(başlangıç oranı, V/V_açık); V_açık hızında tam açık. Başlangıç oranı (hızlanabilmek için) varsayımdır.',
+  'İleri geçiş: kanat açılma oranı = max(başlangıç oranı, V/V_açık); V_açık hızında tam açık. Başlangıç oranı (hızlanabilmek için) varsayımdır. Geçiş koruması: hız 0,85·V_açık altındayken uçak alçalıyorsa veya geçiş irtifasının 1,2 m altındaysa açılma bekletilir.',
   'Geri geçiş (varsayım): önce sabit kanat konumunda rölanti itkiyle ≈1,07·Vs hızına yavaşlanır; sonra kanat eyleyici hızıyla katlanır (katlanan panel hücum açısı artar ve hava freni gibi çalışır), itki ekseni yukarı döndükçe itki devreye girer, son yavaşlama hover kontrolcüsüyle yapılır. Yaklaşma ve geri geçiş rüzgâra karşı uçulur.',
-  'Sabit kanat: L1 yanal güdüm (periyot 17 s, sönüm 0,75), irtifa → yunuslama, hava hızı → itki, koordineli dönüş; yatış sınırı 35°.',
+  'Sabit kanat: L1 yanal güdüm (periyot 17 s, sönüm 0,75), irtifa → yunuslama, hava hızı → itki, koordineli dönüş; yatış sınırı stall marjına göre (en çok 35°). Düşük hızda hız önceliği (burun aşağı), hücum açısı sınırı ve stall kurtarma (kanadı boşalt + güç) vardır.',
   'İtki → devir → ESC görev oranı ileri beslemesi pervane/motor modelinden (itki doğrusallaştırma); motor tepkisi elektromekanik zaman sabitiyle sınırlı.',
   'Batarya: hücre OCV(SoC) tablosu + seri direnç + tek RC kolu (R1 = 0,4·R0, τ = 25 s); sıcaklık etkisi yok. Aviyonik + payload tüketimi sabit 60 W.',
   'Motor / ESC sıcaklığı tek düğümlü ısıl model (bakır + demir kaybı, hava akışıyla artan soğutma) — kaba tahmin.',
@@ -183,8 +183,8 @@ export function simulateMission(product: Product, payload: PayloadOption | null,
   const escRth = 55 / (iEsc * iEsc * spec.esc.resistanceOhm + 0.012 * iEsc * 0.4 * vNom);
   const escC = 0.8 * iEsc;
   const vStall = Math.sqrt((2 * W) / (rho0 * m.Sref * product.aero.clMax));
-  // body angle of attack at which the wing reaches ≈ 92 % of the section stall angle
-  const alphaMax = 0.92 * (spec.section.alphaZeroLiftDeg * DEG + spec.section.clMax / (m.vlm.clAlphaPerRad * (spec.section.liftSlopePerRad / (2 * Math.PI)))) - product.geometry.incidenceDeg * DEG;
+  // body angle of attack at which the wing reaches ≈ 85 % of the section stall angle
+  const alphaMax = 0.85 * (spec.section.alphaZeroLiftDeg * DEG + spec.section.clMax / (m.vlm.clAlphaPerRad * (spec.section.liftSlopePerRad / (2 * Math.PI)))) - product.geometry.incidenceDeg * DEG;
 
   // ---- route
   const home: [number, number] = [0, 0];
@@ -240,6 +240,8 @@ export function simulateMission(product: Product, payload: PayloadOption | null,
   let transStartT = 0, transStartAlt = 0, transMinAlt = 0, backStartT = 0;
   let headingCmd = psi0;
   let backFold = false;
+  let openPrev = 0;
+  let fwEntryT = 0;
   // forward transition is flown into the wind when there is wind (the folded panels inside the
   // propeller slipstream cannot take a crosswind); L1 then joins the first leg in fixed-wing flight
   const trBearing = cfg.env.windSpeedMs > 1.5 ? psi0 : legBearing;
@@ -253,6 +255,7 @@ export function simulateMission(product: Product, payload: PayloadOption | null,
     't', 'phase', 'pn', 'pe', 'alt', 'vn', 've', 'vd', 'roll', 'pitch', 'yaw', 'p', 'q', 'r', 'ias', 'gs', 'aoa', 'beta', 'fold', 'foldCmd',
     'altCmd', 'spdCmd', 'rollCmd', 'pitchCmd', 'ail', 'elev', 'rud', 'battV', 'battI', 'soc', 'power', 'cellV', 'cellT', 'cRate',
     'thrustTot', 'hingeL', 'hingeR', 'nz', 'windN', 'windE', 'windU', 'xtrack', 'wpDist', 'stall', 'sat', 'cl', 'energyWh',
+    'fx', 'fy', 'fz', 'bendL', 'bendR', 'rho', 'usedAh', 'wp',
   ];
   for (let k = 0; k < nR; k++) names.push(`rpm${k + 1}`, `thr${k + 1}`, `thrust${k + 1}`, `cur${k + 1}`, `tmot${k + 1}`, `tesc${k + 1}`);
   const ch: Record<string, number[]> = {};
@@ -370,6 +373,7 @@ export function simulateMission(product: Product, payload: PayloadOption | null,
     const pR = w[0], qR = w[2], rR = -w[1];
     const ias = Math.max(0, vb[0]);
     const vAir = Math.hypot(vb[0], vb[1], vb[2]);
+    const out1BetaRaw = Math.atan2(vb[2], Math.max(1, Math.abs(vb[0])));
     const gs = Math.hypot(x[3], x[5]);
     const pn = x[0], pe = x[2], vn = x[3], ve = x[5], vy = x[4];
     // low-pass filtered aerodynamic force (world) and moment (body) used as feed-forward
@@ -432,15 +436,15 @@ export function simulateMission(product: Product, payload: PayloadOption | null,
       case Ph.HOVER_OUT:
         if (t >= cfg.takeoffHoverS) {
           setPhase(Ph.TRANSITION, t);
-          transStartT = t; transStartAlt = alt; transMinAlt = alt;
+          transStartT = t; transStartAlt = alt; transMinAlt = alt; openPrev = 0;
         }
         break;
       case Ph.TRANSITION:
         mode = 'trans';
         transMinAlt = Math.min(transMinAlt, alt);
-        if (fold < 1.5 * DEG && ias >= vOpen) {
+        if (fold < 1.5 * DEG && ias >= vOpen && vy > -1.5) {
           setPhase(Ph.CLIMB, t);
-          hRef = alt; iAlt = 0; iSpd = 0;
+          hRef = alt; iAlt = 0; iSpd = 0; fwEntryT = t;
           ev(t, 'info', `İleri geçiş tamamlandı: ${(t - transStartT).toFixed(1)} s, irtifa kaybı ${(transStartAlt - transMinAlt).toFixed(1)} m`);
           flags.transDur = true;
         } else if (tPhase > 60) {
@@ -576,7 +580,12 @@ export function simulateMission(product: Product, payload: PayloadOption | null,
     } else if (mode === 'trans') {
       // --- forward transition: opening fraction scheduled on airspeed
       const ramp = clamp(sinceTrans / 2.5, 0, 1);
-      const open = clamp(Math.max(ramp * tr.initialOpenFraction, ias / vOpen), 0, 1);
+      let open = clamp(Math.max(ramp * tr.initialOpenFraction, ias / vOpen), 0, 1);
+      // transition guard: opening tilts the thrust axis forward, so do not open further while the
+      // aircraft is sinking or below its transition altitude (the wing is not carrying the load yet)
+      const sinking = ias < 0.85 * vOpen && (vy < -0.7 || alt < transStartAlt - 1.2);
+      if (sinking && open > openPrev) open = openPrev;
+      openPrev = open;
       foldCmd = maxFold * (1 - open);
       spdCmd = cfg.cruiseSpeedMs;
       const wFw = clamp((ias - 0.55 * vOpen) / (0.35 * vOpen), 0, 1);
@@ -587,7 +596,9 @@ export function simulateMission(product: Product, payload: PayloadOption | null,
       // lateral: keep the track
       const vRight = -vn * shd + ve * chd;
       phiC = clamp(Math.atan2(-0.8 * vRight, G), -12 * DEG, 12 * DEG);
-      rC = clamp(1.2 * wrapPi(trBearing - psi), -0.4, 0.4);
+      // mid-fold the panels form a steep "V" inside the slipstream: sideslip produces a rolling moment
+      // larger than the rotor roll authority, so yaw is used to keep the sideslip at zero
+      rC = clamp((ias > 3 ? 1.0 * out1BetaRaw : 0) + 0.6 * wrapPi(trBearing - psi), -0.5, 0.5);
       const tY = twy > 0.18 ? vertThrust(transStartAlt, 2, 2) : 0;
       const aX = clamp(0.8 * (spdCmd - ias), -1, 2);
       const fFwdAero = faeroW[0] * chd + faeroW[2] * shd;
@@ -611,10 +622,16 @@ export function simulateMission(product: Product, payload: PayloadOption | null,
       thC = clamp(aTrim + gamC + 0.035 * (hdotC - vy) + 0.012 * iAlt, -12 * DEG, 14 * DEG);
       // angle-of-attack protection: never command a pitch that puts the wing beyond α_max
       thC = Math.min(thC, th - out1.alpha + alphaMax);
-      // airspeed by thrust
+      // airspeed by thrust; airspeed has priority over altitude when slow (energy protection)
       const eV = spdCmd - ias;
       iSpd = clamp(iSpd + eV * dt, -30, 30);
-      Tdes = interp(trimV, trimT, spdCmd) + W * Math.sin(gamC) + mass * (0.5 * eV + 0.06 * iSpd);
+      Tdes = interp(trimV, trimT, spdCmd) + W * Math.sin(gamC) + mass * (1.2 * eV + 0.1 * iSpd);
+      if (eV > 0.8 && spdOverride === 0) thC -= clamp(0.025 * (eV - 0.8), 0, 7 * DEG);
+      if (out1.stallFraction > 0.3 && spdOverride === 0) {
+        // stall recovery: unload the wing and apply full power
+        thC = Math.min(thC, th - out1.alpha + 0.6 * alphaMax);
+        Tdes = Math.max(Tdes, 0.6 * W);
+      }
       // L1 lateral guidance
       const L1 = Math.max(35, 0.3183 * 0.75 * 17 * gs);
       const nu1 = Math.asin(clamp(xtrack / L1, -0.7071, 0.7071));
@@ -623,13 +640,15 @@ export function simulateMission(product: Product, payload: PayloadOption | null,
       const latAcc = (-2.25 * gs * gs * Math.sin(clamp(nu1 + nu2, -Math.PI / 2, Math.PI / 2))) / L1;
       // bank limit keeps a stall margin: n ≤ 0.8·(V/Vs)², never more than 35°
       const nAllow = Math.max(1.02, 0.8 * (ias / vStall) ** 2);
-      const bankLim = clamp(Math.acos(1 / nAllow), 8 * DEG, 35 * DEG);
+      // gentle manoeuvring right after the transition and close to the ground
+      const lowEnergy = t - fwEntryT < 6 || alt < 40;
+      const bankLim = clamp(Math.acos(1 / nAllow), 8 * DEG, (lowEnergy ? 15 : 35) * DEG);
       const phiRaw = clamp(Math.atan2(latAcc, G), -bankLim, bankLim);
-      phiC = phiCmdPrev + clamp(phiRaw - phiCmdPrev, -40 * DEG * dt, 40 * DEG * dt);
+      phiC = phiCmdPrev + clamp(phiRaw - phiCmdPrev, -20 * DEG * dt, 20 * DEG * dt);
       phiCmdPrev = phiC;
       // coordinated turn + sideslip washout
       const psiDot = (G * Math.tan(phi)) / Math.max(10, vAir);
-      rC = psiDot * Math.cos(phi) * Math.cos(th) + 1.6 * out1.beta;
+      rC = psiDot * Math.cos(phi) * Math.cos(th) + 1.0 * out1.beta;
       if (ias < tr.assistSpeedMs) assistTime += dt;
     }
     if (mode !== 'fw') phiCmdPrev = phi;
@@ -650,7 +669,10 @@ export function simulateMission(product: Product, payload: PayloadOption | null,
     }
     des[0] = kRate * eP + 3 * iP;
     des[1] = kRate * eQ + 3 * iQ;
-    des[2] = (fwLike ? 4 : 3) * eR + 1.5 * iR;
+    // fixed wing: yaw damper + sideslip feedback only (no integrator — the rudder authority of the V-tail is small)
+    des[2] = mode === 'fw' ? clamp(1.8 * eR, -1.5, 1.5) : (fwLike ? 4 : 3) * eR + 1.5 * iR;
+    if (mode === 'fw') iR = 0;
+    if (!fwLike) des[2] = clamp(des[2], -1.2, 1.2); // yaw authority (reaction torque) is small: never let it starve roll / pitch
     // desired body moments (Mx roll, My = −yaw, Mz pitch) minus the aero moment not produced by controls
     const I = geom.I;
     const Mdes = onGround ? [0, 0, 0] : [I[0] * des[0] - maeroB[0], -I[4] * des[2] - maeroB[1], I[8] * des[1] - maeroB[2]];
@@ -702,11 +724,15 @@ export function simulateMission(product: Product, payload: PayloadOption | null,
         for (let j = 0; j < 4; j++) {
           let s = 0;
           for (let c = 0; c < nU; c++) if (!fixed[c]) s += Bm[i][c] * sU[c] * Bm[j][c];
-          // damped least squares: once something saturates the total-thrust row is relaxed first,
-          // so that roll / pitch / yaw moments keep priority over collective thrust
-          M4[i].push(s + (i === j ? (i === 0 ? (pass === 0 ? 1e-6 : 0.5) : 1e-8) : 0));
+          M4[i].push(s);
         }
       }
+      // priority (as in ArduPilot's motor mixer): roll / pitch first, then collective thrust, yaw last.
+      // Once an actuator saturates, the thrust and yaw rows are progressively relaxed.
+      const relT = pass === 0 ? 1e-9 : pass === 1 ? 0.5 : 2;
+      const relY = pass === 0 ? 1e-9 : pass === 1 ? 5 : 30;
+      M4[0][0] *= 1 + relT; M4[2][2] *= 1 + relY;
+      for (let i = 0; i < 4; i++) M4[i][i] += 1e-9;
       const lam = solve(M4, res);
       let clipped = false;
       for (let c = 0; c < nU; c++) {
@@ -738,7 +764,8 @@ export function simulateMission(product: Product, payload: PayloadOption | null,
     const cellV = vBatt / bat.cellsS;
     const cRate = battI / capAh;
     const spf = [out1.F[0] / mass, out1.F[1] / mass, out1.F[2] / mass];
-    const hm = hingeTotal(m, geom, out1, spf);
+    const pl = panelLoads(m, geom, out1, spf);
+    const hm = pl.hinge;
     const nz = spf[1] / G;
     if (step % outEvery === 0) {
       const c = ch;
@@ -751,6 +778,9 @@ export function simulateMission(product: Product, payload: PayloadOption | null,
       c.thrustTot.push(out1.thrust.reduce((a, b) => a + b, 0)); c.hingeL.push(hm[0]); c.hingeR.push(hm[1]); c.nz.push(nz);
       c.windN.push(wind[0]); c.windE.push(wind[2]); c.windU.push(wind[1]); c.xtrack.push(xtrack); c.wpDist.push(wpDist);
       c.stall.push(out1.stallFraction); c.sat.push(satNow); c.cl.push(out1.wingCl); c.energyWh.push(energyJ / 3600);
+      // specific force (body x fwd, y up, z right); on the ground the gear reaction carries the weight
+      c.fx.push(onGround ? 0 : spf[0]); c.fy.push(onGround ? G : spf[1]); c.fz.push(onGround ? 0 : spf[2]);
+      c.bendL.push(pl.bend[0]); c.bendR.push(pl.bend[1]); c.rho.push(rho); c.usedAh.push(usedAh); c.wp.push(leg);
       for (let k = 0; k < nR; k++) {
         c[`rpm${k + 1}`].push((x[13 + k] * 60) / (2 * Math.PI)); c[`thr${k + 1}`].push(duty[k] * 100); c[`thrust${k + 1}`].push(out1.thrust[k]);
         c[`cur${k + 1}`].push(out1.current[k]); c[`tmot${k + 1}`].push(tMotor[k]); c[`tesc${k + 1}`].push(tEsc[k]);
